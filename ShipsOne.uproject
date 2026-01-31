@@ -1,0 +1,22 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "{50C78A69-4DFA-83BD-6B20-C2BA8A3705EB}",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "ShipsOne",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "ModelingToolsEditorMode",
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
+		}
+	]
+}
