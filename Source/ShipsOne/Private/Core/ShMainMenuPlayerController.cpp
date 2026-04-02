@@ -1,5 +1,8 @@
 #include "Core/ShMainMenuPlayerController.h"
 #include "Data/ConnectionData.h"
+#include "Data/UIData.h"
+#include "Interfaces/HudUtility.h"
+#include "GameFramework/HUD.h"
 
 DEFINE_LOG_CATEGORY(ShLog_Connection);
 
@@ -12,6 +15,14 @@ void AShMainMenuPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	SendCheckRequest();
+
+	if (!GetHUD()->Implements<UHudUtility>())
+	{
+		UE_LOG(ShLog_UI, Error, TEXT("HUD class does not support interface class. Func: %s. Obj: %s"), ANSI_TO_TCHAR(__func__), *GetName());
+		return;
+	}
+
+	IHudUtility::Execute_InitMainWidget(GetHUD());
 }
 
 void AShMainMenuPlayerController::SendCheckRequest()
