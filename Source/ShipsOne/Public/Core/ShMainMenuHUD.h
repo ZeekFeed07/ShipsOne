@@ -14,8 +14,6 @@ public:
 public:
 	virtual void InitMainWidget_Implementation() override;
 
-protected:
-	virtual void SetupInputMode();
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Main")
 	TObjectPtr<UUserWidget> MainMenuWidgetRef;
