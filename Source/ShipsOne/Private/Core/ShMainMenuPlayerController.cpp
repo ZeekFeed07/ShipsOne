@@ -3,6 +3,7 @@
 #include "Data/UIData.h"
 #include "Interfaces/HudUtility.h"
 #include "GameFramework/HUD.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 DEFINE_LOG_CATEGORY(ShLog_Connection);
 
@@ -11,10 +12,14 @@ AShMainMenuPlayerController::AShMainMenuPlayerController()
 	PrimaryActorTick.bCanEverTick = false;
 }
 
+void AShMainMenuPlayerController::RequestQuitGame()
+{
+	UKismetSystemLibrary::QuitGame(GetWorld(), this, EQuitPreference::Quit, false);
+}
+
 void AShMainMenuPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	SendCheckRequest();
 
 	if (!GetHUD()->Implements<UHudUtility>())
 	{
@@ -23,6 +28,15 @@ void AShMainMenuPlayerController::BeginPlay()
 	}
 
 	IHudUtility::Execute_InitMainWidget(GetHUD());
+
+	SetupInputMode();
+}
+
+
+void AShMainMenuPlayerController::SetupInputMode()
+{
+	SetInputMode(FInputModeUIOnly());
+	bShowMouseCursor = true;
 }
 
 void AShMainMenuPlayerController::SendCheckRequest()

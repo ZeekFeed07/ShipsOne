@@ -16,8 +16,12 @@ class SHIPSONE_API AShMainMenuPlayerController : public APlayerController
 	GENERATED_BODY()
 public:
 	AShMainMenuPlayerController();
+public:
+	UFUNCTION(BlueprintCallable, Category = "Quit")
+	virtual void RequestQuitGame();
 protected:
-	void BeginPlay() override;
+	virtual void BeginPlay() override;
+	virtual void SetupInputMode();
 
 private:
 	void SendCheckRequest();
