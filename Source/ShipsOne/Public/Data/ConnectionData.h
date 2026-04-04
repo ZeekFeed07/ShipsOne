@@ -5,9 +5,11 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(ShLog_Connection, All, All)
 
-UENUM(BlueprintType)
-enum class EType : uint8
+USTRUCT(BlueprintType)
+struct FRoomInfo
 {
-	Type_1,
-	Type_2
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString PlayerName;
 };
