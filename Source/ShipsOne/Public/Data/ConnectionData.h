@@ -11,5 +11,11 @@ struct FRoomInfo
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FString PlayerName;
+	FString RoomID;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString HostName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString CreatedTime;
 };

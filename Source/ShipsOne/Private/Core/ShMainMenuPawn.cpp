@@ -4,7 +4,7 @@ AShMainMenuPawn::AShMainMenuPawn()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	SetReplicates(false);
+	bReplicates = false;
 }
 
 void AShMainMenuPawn::BeginPlay()

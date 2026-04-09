@@ -12,13 +12,62 @@ AShMainMenuHUD::AShMainMenuHUD()
 
 void AShMainMenuHUD::InitMainWidget_Implementation()
 {
-	if (!IsValid(MainMenuWidgetRef))
+	IHudUtility::Execute_ShowMainMenuWidget(this);
+}
+
+void AShMainMenuHUD::ShowMainMenuWidget_Implementation()
+{
+	if (!IsValid(MainMenuWidgetClass))
 	{
-		UE_LOG(ShLog_UI, Error, TEXT("Main widget reference is not valid. Func: %s. Obj: %s"), ANSI_TO_TCHAR(__func__), *GetName());
+		UE_LOG(ShLog_UI, Error, TEXT("%s Func: %s. Obj: %s."), *LogMessage_MainMenuWidgeClassFailure, TEXT(__FUNCTION__), *GetName());
 		return;
 	}
 
-	MainMenuWidgetRef->RemoveFromParent();
-	MainMenuWidgetRef->AddToViewport();
-	MainMenuWidgetRef->SetOwningPlayer(GetOwningPawn()->GetController<APlayerController>());
+	ClearViewport();
+
+	MainMenuWidgetObject = CreateWidget(GetOwningPlayerController(), MainMenuWidgetClass);
+
+	if (!IsValid(MainMenuWidgetObject))
+	{
+		UE_LOG(ShLog_UI, Error, TEXT("%s Func: %s. Obj: %s."), *LogMessage_CreatingWidgetFailureMessage, TEXT(__FUNCTION__), *GetName());
+		return;
+	}
+
+	MainMenuWidgetObject->AddToViewport();
+}
+
+void AShMainMenuHUD::ShowLobbyWidget_Implementation()
+{
+	if (!IsValid(LobbyWidgetClass))
+	{
+		UE_LOG(ShLog_UI, Error, TEXT("%s Func: %s. Obj: %s."), *LogMessage_LobbyWidgeClassFailure, TEXT(__FUNCTION__), *GetName());
+		return;
+	}
+
+	ClearViewport();
+
+	LobbyWidgetObject = CreateWidget(GetOwningPlayerController(), LobbyWidgetClass);
+
+	if (!IsValid(LobbyWidgetObject))
+	{
+		UE_LOG(ShLog_UI, Error, TEXT("%s Func: %s. Obj: %s."), *LogMessage_CreatingWidgetFailureMessage, TEXT(__FUNCTION__), *GetName());
+		return;
+	}
+
+	LobbyWidgetObject->AddToViewport();
+}
+
+void AShMainMenuHUD::ClearViewport()
+{
+	if (IsValid(MainMenuWidgetObject) && MainMenuWidgetObject->IsInViewport())
+	{
+		MainMenuWidgetObject->RemoveFromParent();
+		MainMenuWidgetObject = nullptr;
+	}
+
+	if (IsValid(LobbyWidgetObject) && LobbyWidgetObject->IsInViewport())
+	{
+		LobbyWidgetObject->RemoveFromParent();
+		LobbyWidgetObject = nullptr;
+	}
 }

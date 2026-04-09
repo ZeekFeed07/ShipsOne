@@ -19,4 +19,10 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Initialization")
 	void InitMainWidget();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "MainMenu")
+	void ShowMainMenuWidget();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Lobby")
+	void ShowLobbyWidget();
 };
