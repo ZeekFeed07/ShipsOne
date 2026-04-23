@@ -17,7 +17,8 @@ public class ShipsOne : ModuleRules
 			"EnhancedInput",
 			"HTTP",
             "Json",
-			"JsonUtilities"
+			"JsonUtilities",
+			"NetCore"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
