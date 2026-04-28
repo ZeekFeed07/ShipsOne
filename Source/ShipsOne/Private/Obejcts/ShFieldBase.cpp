@@ -1,6 +1,8 @@
 #include "Obejcts/ShFieldBase.h"
 #include "Obejcts/ShCellBase.h"
 #include "Data/GameplayData.h"
+#include "Data/Assets/FieldDataAsset.h"
+#include "Data/Assets/CellDataAsset.h"
 
 AShFieldBase::AShFieldBase()
 {
@@ -17,16 +19,16 @@ void AShFieldBase::PlaceInCenter()
 
 void AShFieldBase::PlaceInLeft()
 {
-	float FieldX = FieldSizeX * CellSize.X / 2.f;
-	float FieldY = FieldSizeY * CellSize.Y / 2.f;
-	SetActorLocation({ FieldX + CenterGap, FieldY, 0.f });
+	float FieldX = FieldConfig->FieldSizeX * CellConfig->CellSize.X / 2.f;
+	float FieldY = FieldConfig->FieldSizeY * CellConfig->CellSize.Y / 2.f;
+	SetActorLocation({ FieldX + FieldConfig->CenterGap, FieldY, 0.f });
 }
 
 void AShFieldBase::PlaceInRight()
 {
-	float FieldX = FieldSizeX * CellSize.X / 2.f;
-	float FieldY = FieldSizeY * CellSize.Y / 2.f;
-	SetActorLocation({ FieldX - CenterGap, FieldY, 0.f }); 
+	float FieldX = FieldConfig->FieldSizeX * CellConfig->CellSize.X / 2.f;
+	float FieldY = FieldConfig->FieldSizeY * CellConfig->CellSize.Y / 2.f;
+	SetActorLocation({ FieldX - FieldConfig->CenterGap, FieldY, 0.f });
 }
 
 void AShFieldBase::BeginInit()
@@ -42,6 +44,8 @@ void AShFieldBase::Tick(float DeltaTime)
 void AShFieldBase::BeginPlay()
 {
 	Super::BeginPlay();
+	ApplyFieldConfig();
+	ApplyCellConfig();
 }
 
 void AShFieldBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -66,31 +70,75 @@ bool AShFieldBase::CreateCells()
 
 	ClearCells();
 
-	Field.SetNum(FieldSizeX * FieldSizeY);
+	Field.SetNum(FieldConfig->FieldSizeX * FieldConfig->FieldSizeY);
 
 	FVector Position = FVector::Zero();
 	AShCellBase* CellPtr = nullptr;
 
-	float FieldHalfX = FieldSizeX * CellSize.X / 2.f;
-	float FieldHalfY = FieldSizeY * CellSize.Y / 2.f;
+	float FieldHalfX = FieldConfig->FieldSizeX * CellConfig->CellSize.X / 2.f;
+	float FieldHalfY = FieldConfig->FieldSizeY * CellConfig->CellSize.Y / 2.f;
 
-	float CellHalfX = CellSize.X / 2.f;
-	float CellHalfY = CellSize.Y / 2.f;
+	float CellHalfX = CellConfig->CellSize.X / 2.f;
+	float CellHalfY = CellConfig->CellSize.Y / 2.f;
 
-	for (int32 i = 0; i < FieldSizeX; ++i)
+	for (int32 i = 0; i < FieldConfig->FieldSizeX; ++i)
 	{
-		for (int32 j = 0; j < FieldSizeY; ++j)
+		for (int32 j = 0; j < FieldConfig->FieldSizeY; ++j)
 		{
 			Position = GetActorLocation()
 				-FVector(FieldHalfX, FieldHalfY, 0)
-				+FVector(CellSize.X * i + CellHalfX, CellHalfY + CellSize.Y * j, 0);
+				+FVector(CellConfig->CellSize.X * i + CellHalfX, CellHalfY + CellConfig->CellSize.Y * j, 0);
 			CellPtr = World->SpawnActor<AShCellBase>(Position, {});
+
 			checkf(IsValid(CellPtr), TEXT("Failed to spawn cell at [%d][%d]"), i, j);
+			
+			CellPtr->ApplyMesh(CellConfig->MeshRef);
+			CellPtr->ScaleMeshBody(CellConfig->ScaleMesh);
+			CellPtr->SetMeshMaterial(CellConfig->MaterialRef);
+
 			SetCell(i, j, CellPtr);
 		}
 	}
 
 	return true;
+}
+
+void AShFieldBase::ApplyFieldConfig()
+{
+	UFieldDataAsset* ProcessingConfig = LoadObject<UFieldDataAsset>(nullptr, *FieldConfigPath);
+	if (!IsValid(ProcessingConfig))
+	{
+		UE_LOG(
+			ShLog_Gameplay,
+			Error,
+			TEXT("%s Func: %s. Obj: %s"),
+			*LogMessage_FieldConfigNotApplied,
+			TEXT(__FUNCTION__),
+			*GetName()
+		);
+		return;
+	}
+
+	FieldConfig = ProcessingConfig;
+}
+
+void AShFieldBase::ApplyCellConfig()
+{
+	UCellDataAsset* ProcessingConfig = LoadObject<UCellDataAsset>(nullptr, *CellConfigPath);
+	if (!IsValid(ProcessingConfig))
+	{
+		UE_LOG(
+			ShLog_Gameplay,
+			Error,
+			TEXT("%s Func: %s. Obj: %s"),
+			*LogMessage_CellConfigNotApplied,
+			TEXT(__FUNCTION__),
+			*GetName()
+		);
+		return;
+	}
+
+	CellConfig = ProcessingConfig;
 }
 
 void AShFieldBase::ClearCells()
@@ -108,19 +156,19 @@ void AShFieldBase::ClearCells()
 AShCellBase* AShFieldBase::GetCell(int32 X, int32 Y)
 {
 	checkf(
-		(X >= 0 && X < FieldSizeX) && (Y >= 0 && Y < FieldSizeY),
+		(X >= 0 && X < FieldConfig->FieldSizeX) && (Y >= 0 && Y < FieldConfig->FieldSizeY),
 		TEXT("Accessing field out of bounds. X = %d, Y = %d, when XSize = %d and YSize = %d"),
-		X, Y, FieldSizeX, FieldSizeY
+		X, Y, FieldConfig->FieldSizeX, FieldConfig->FieldSizeY
 	);
-	return Field[X * FieldSizeY + Y];
+	return Field[X * FieldConfig->FieldSizeY + Y];
 }
 
 void AShFieldBase::SetCell(int32 X, int32 Y, AShCellBase* NewItem)
 {
 	checkf(
-		(X >= 0 && X < FieldSizeX) && (Y >= 0 && Y < FieldSizeY),
+		(X >= 0 && X < FieldConfig->FieldSizeX) && (Y >= 0 && Y < FieldConfig->FieldSizeY),
 		TEXT("Accessing field out of bounds. X = %d, Y = %d, when XSize = %d and YSize = %d"),
-		X, Y, FieldSizeX, FieldSizeY
+		X, Y, FieldConfig->FieldSizeX, FieldConfig->FieldSizeY
 	);
-	Field[X * FieldSizeY + Y] = NewItem;
+	Field[X * FieldConfig->FieldSizeY + Y] = NewItem;
 }

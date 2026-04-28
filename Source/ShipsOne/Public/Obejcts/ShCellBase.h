@@ -4,6 +4,8 @@
 #include "GameFramework/Actor.h"
 #include "ShCellBase.generated.h"
 
+class UCellDataAsset;
+
 UCLASS()
 class SHIPSONE_API AShCellBase : public AActor
 {
@@ -12,7 +14,16 @@ class SHIPSONE_API AShCellBase : public AActor
 public:	
 	AShCellBase();
 public:	
-	virtual void Tick(float DeltaTime) override;	
+	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION()
+	virtual void ApplyMesh(UStaticMesh* MeshBody);
+
+	UFUNCTION()
+	virtual void ScaleMeshBody(const FVector& Scale);
+
+	UFUNCTION()
+	virtual void SetMeshMaterial(UMaterialInterface* Material);
 protected:
 	virtual void BeginPlay() override;
 private:
@@ -26,12 +37,10 @@ private:
 	// ================================================================================ //
 	
 	// ==================================== Logging ==================================== //
-	FString LogMessage_FindingCellMeshFailure = TEXT("Unnable to find cell mesh by path.");
-	// ================================================================================= //
 
-	// ==================================== Paths ==================================== //
+	FString LogMessage_FindingCellMeshFailure	= TEXT("Unnable to find cell mesh by path.");
+	FString LogMessage_MeshPtrNotValid			= TEXT("Mesh pointer not valid while applying.");
+	FString LogMessage_MaterialPtrNotValid		= TEXT("Material pointer not valid while applying.");
 	
-	const FString CellMeshPath = TEXT("/Game/ShipsOne/Art/Objects/Cell/SM_Cell.SM_Cell");
-
-	// =============================================================================== //
+	// ================================================================================= //
 };

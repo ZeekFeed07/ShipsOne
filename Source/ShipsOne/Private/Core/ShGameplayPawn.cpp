@@ -6,12 +6,6 @@ AShGameplayPawn::AShGameplayPawn()
 
 }
 
-void AShGameplayPawn::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
 void AShGameplayPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -23,3 +17,7 @@ void AShGameplayPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 }
 
+void AShGameplayPawn::BeginPlay()
+{
+	Super::BeginPlay();
+}

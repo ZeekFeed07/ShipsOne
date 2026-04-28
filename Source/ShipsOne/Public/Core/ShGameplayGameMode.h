@@ -62,7 +62,7 @@ private:
 	FString LogMessage_StateNotValid			= TEXT("Player state is not valid or not implements interface.");
 	FString LogMessage_ControllerAlreadySet		= TEXT("Player controller is already set.");
 	FString LogMessage_MoreThan2Detected		= TEXT("More than 2 players detected.");
-	FString LogMessage_GameManagerInitFailure	= TEXT("More than 2 players detected.");
+	FString LogMessage_GameManagerInitFailure	= TEXT("Game manager initialization failed.");
 
 	// ================================================================================= //
 

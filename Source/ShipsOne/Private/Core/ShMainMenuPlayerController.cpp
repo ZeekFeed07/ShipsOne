@@ -107,7 +107,7 @@ void AShMainMenuPlayerController::BeginPlay()
 
 void AShMainMenuPlayerController::SetupInputMode()
 {
-	FInputModeGameAndUI InputMode = FInputModeGameAndUI();
+	FInputModeGameAndUI InputMode = {};
 	InputMode.SetHideCursorDuringCapture(false);
 
 	SetInputMode(InputMode);
