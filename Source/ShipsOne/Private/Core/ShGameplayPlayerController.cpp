@@ -235,7 +235,9 @@ void AShGameplayPlayerController::RotateShipInput(const FInputActionValue& Value
 		return;
 	}
 
-	Manager->RotateShip();
+	float RotationValue = Value.Get<float>();
+
+	RotationValue < 0 ? Manager->RotateShipClockwise() : Manager->RotateShipCounterClockwise();
 }
 
 void AShGameplayPlayerController::SetupInputMode()

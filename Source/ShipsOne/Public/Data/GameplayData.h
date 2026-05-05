@@ -13,16 +13,16 @@ struct Fasd
 	int32 az;
 };
 
-UENUM()
+UENUM(BlueprintType)
 enum class EShipSize : uint8
 {
-	ONE = 1,
-	TWO = 2,
-	THREE = 3,
-	FOUR = 4
+	ONE = 0,
+	TWO = 1,
+	THREE = 2,
+	FOUR = 3
 };
 
-UENUM()
+UENUM(BlueprintType)
 enum class EShipDirection : uint8
 {
 	TOP = 0,
@@ -33,3 +33,5 @@ enum class EShipDirection : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllowFieldCreation);
 DECLARE_DYNAMIC_DELEGATE(FOnAllowFieldCreationNotMulticast);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnShipsNumStateSignature, EShipSize, ShipSize, int32, CurrentShipsNum);

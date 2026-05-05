@@ -27,8 +27,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 private:
-	
-private:
 	// ==================================== Common ==================================== //
 
 	UPROPERTY(EditDefaultsOnly, Category = "Visual");

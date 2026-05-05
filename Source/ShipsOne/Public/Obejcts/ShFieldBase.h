@@ -2,8 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Data/GameplayData.h"
 #include "ShFieldBase.generated.h"
 
+class AShShipBase;
 class AShCellBase;
 class UCellDataAsset;
 class UFieldDataAsset;
@@ -17,6 +19,9 @@ public:
 	AShFieldBase();
 
 public:
+
+	virtual void Tick(float DeltaTime) override;
+	
 	UFUNCTION()
 	virtual void PlaceInCenter();
 	
@@ -29,7 +34,14 @@ public:
 	UFUNCTION()
 	virtual void BeginInit();
 
-	virtual void Tick(float DeltaTime) override;
+	UFUNCTION()
+	virtual void ShipHoverOn(AShCellBase* CellPtr, AShShipBase* ShipPtr);
+
+	UFUNCTION()
+	void SetFieldConfig(UFieldDataAsset* ConfigPtr);
+
+	UFUNCTION()
+	void SetCellConfig(UCellDataAsset* ConfigPtr);
 
 protected:
 	virtual void BeginPlay() override;
@@ -41,13 +53,22 @@ private:
 	bool CreateCells();
 
 	UFUNCTION()
-	void ApplyFieldConfig();
-
-	UFUNCTION()
-	void ApplyCellConfig();
-
-	UFUNCTION()
 	void ClearCells();
+
+	UFUNCTION()
+	bool CheckCanPlaceShip(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize);
+
+	UFUNCTION()
+	void ColorizeAreaPositiveTemporary(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize);
+	
+	UFUNCTION()
+	void ColorizeAreaPositiveFinally(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize);
+
+	UFUNCTION()
+	void ColorizeAreaNegativeTemporary(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize);
+
+	UFUNCTION()
+	void ColorizeAreaNegativeFinally(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize);
 
 	UFUNCTION()
 	AShCellBase* GetCell(int32 X, int32 Y);
@@ -58,28 +79,25 @@ private:
 private:
 	// ==================================== Common ==================================== //
 
-	UPROPERTY(EditAnywhere, Category = "Data");
+	UPROPERTY()
+	TArray<AShCellBase*> Field;
+
+	UPROPERTY();
 	TObjectPtr<UFieldDataAsset> FieldConfig;
 
-	UPROPERTY(EditAnywhere, Category = "Data");
+	UPROPERTY();
 	TObjectPtr<UCellDataAsset> CellConfig;
-
-	TArray<AShCellBase*> Field;
 
 	// ================================================================================ //
 
 	// ==================================== Logging ==================================== //
 
 	FString LogMessage_WorldNotValid			= TEXT("World is not valid.");
-	FString LogMessage_CellConfigNotApplied		= TEXT("Cell config does not applied.");
-	FString LogMessage_FieldConfigNotApplied	= TEXT("Field config does not applied.");
+	FString LogMessage_CellConfigNotValid		= TEXT("Cell config is not valid.");
+	FString LogMessage_CellMeshNotValid			= TEXT("Cell mesh is not valid.");
+	FString LogMessage_CellMaterialNotValid		= TEXT("Cell material is not valid.");
+	FString LogMessage_FieldConfigNotValid		= TEXT("Field config is not valid.");
+	FString LogMessage_ZeroDividing				= TEXT("Dividing by zero.");
 	
 	// ================================================================================= //
-
-	// ==================================== Paths ==================================== //
-
-	const FString FieldConfigPath	= TEXT("/Game/ShipsOne/Dev/Data/DataAssets/DA_MainFieldInfo.DA_MainFieldInfo");
-	const FString CellConfigPath	= TEXT("/Game/ShipsOne/Dev/Data/DataAssets/DA_MainCellInfo.DA_MainCellInfo");
-
-	// =============================================================================== //
 };

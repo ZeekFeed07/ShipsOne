@@ -18,7 +18,7 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UStaticMesh> Size2Body;
-	
+
 	UPROPERTY(EditAnywhere)
 	FVector Scale2 = { 1.0f, 1.0f, 1.0f };
 
@@ -33,4 +33,13 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	FVector Scale4 = { 1.0f, 1.0f, 1.0f };
+
+	UPROPERTY(EditAnywhere)
+	float PlacingVerticalOffset = 100.f;
+
+	UPROPERTY(EditAnywhere)
+	float PlacingDistanceFromCamera = 1000.f;
+
+	UPROPERTY(EditAnywhere)
+	float SnapToCursorInterpolationSpeed = 5.f;
 };

@@ -1,5 +1,6 @@
 #include "Obejcts/ShShipBase.h"
 #include "Data/Assets/ShipDataAsset.h"
+#include "Data/Assets/CellDataAsset.h"
 
 AShShipBase::AShShipBase()
 {
@@ -15,8 +16,11 @@ void AShShipBase::BeginPlay()
 
 void AShShipBase::SetupMesh()
 {
+	auto* SceneComponent = CreateDefaultSubobject<USceneComponent>("Root");
+	RootComponent = SceneComponent;
+	
 	Body = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Body"));
-	RootComponent = Body;
+	Body->SetupAttachment(SceneComponent);
 
 	Body->AddLocalRotation({0.f, 90.f, 0.f});
 	Body->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
@@ -79,15 +83,66 @@ void AShShipBase::SetShipDirection(const EShipDirection ShipDirection)
 	Direction = ShipDirection;
 }
 
+void AShShipBase::SetShipConfig(UShipDataAsset* Asset)
+{
+	if (IsValid(Asset))
+	{
+		ShipConfig = Asset;
+	}
+}
+
+void AShShipBase::SetCellConfig(UCellDataAsset* ConfigPtr)
+{
+	if (IsValid(ConfigPtr))
+	{
+		CellConfig = ConfigPtr;
+	}
+}
+
+void AShShipBase::NormalizeForDirection()
+{
+	if (!IsValid(CellConfig))
+	{
+		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
+			*LogMessage_CellConfigNotValid,
+			TEXT(__FUNCTION__),
+			*GetName());
+		return;
+	}
+
+	FVector CurrentLocation = FVector::ZeroVector;
+
+	switch (Direction)
+	{
+	case EShipDirection::TOP:
+		CurrentLocation += FVector(CellConfig->CellSize.X / 2.f * ((int32)Size - 1), 0.f, 0.f);
+		break;
+	case EShipDirection::LEFT:
+		CurrentLocation += FVector(0.f, CellConfig->CellSize.Y / 2.f * ((int32)Size - 1), 0.f);
+		break;
+	case EShipDirection::BOTTOM:
+		CurrentLocation += FVector(-CellConfig->CellSize.X / 2.f * ((int32)Size - 1), 0.f, 0.f);
+		break;
+	case EShipDirection::RIGHT:
+		CurrentLocation += FVector(0.f, -CellConfig->CellSize.Y / 2.f * ((int32)Size - 1), 0.f);
+		break;
+	default:
+		return;
+	}
+	UE_LOG(ShLog_Gameplay, Error, TEXT("%f:%f:%f"), CurrentLocation.X, CurrentLocation.Y, CurrentLocation.Z);
+	Body->AddLocalOffset(CurrentLocation);
+}
+
 void AShShipBase::RotateClockwise()
 {
 	Direction = EShipDirection(((int32)Direction + 1) % 4);
 	AddActorWorldRotation({ 0.f, 90.f, 0.f });
 }
 
-void AShShipBase::SetShipConfig(UShipDataAsset* Asset)
+void AShShipBase::RotateCounterClockwise()
 {
-	ShipConfig = Asset;
+	Direction = EShipDirection(((int32)Direction + 3) % 4);
+	AddActorWorldRotation({ 0.f, -90.f, 0.f });
 }
 
 EShipSize AShShipBase::GetShipSize()
@@ -99,4 +154,3 @@ EShipDirection AShShipBase::GetShipDirection()
 {
 	return Direction;
 }
-

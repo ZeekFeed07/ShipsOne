@@ -6,6 +6,7 @@
 #include "ShShipBase.generated.h"
 
 class UShipDataAsset;
+class UCellDataAsset;
 
 UCLASS()
 class SHIPSONE_API AShShipBase : public AActor
@@ -25,10 +26,19 @@ public:
 	virtual void SetShipDirection(const EShipDirection ShipDirection);
 
 	UFUNCTION()
+	virtual void SetShipConfig(UShipDataAsset* Asset);
+
+	UFUNCTION()
+	virtual void SetCellConfig(UCellDataAsset* Asset);
+
+	UFUNCTION()
+	virtual void NormalizeForDirection();
+
+	UFUNCTION()
 	virtual void RotateClockwise();
 
 	UFUNCTION()
-	virtual void SetShipConfig(UShipDataAsset* Asset);
+	virtual void RotateCounterClockwise();
 
 	UFUNCTION()
 	virtual EShipSize GetShipSize();
@@ -50,7 +60,10 @@ private:
 	UPROPERTY()
 	TObjectPtr<UShipDataAsset> ShipConfig;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY();
+	TObjectPtr<UCellDataAsset> CellConfig;
+
+	UPROPERTY()
 	TObjectPtr<UStaticMeshComponent> Body;
 
 	UPROPERTY()
@@ -65,6 +78,7 @@ private:
 
 	FString LogMessage_BodyMeshNotValid		= TEXT("Body mesh is not valid.");
 	FString LogMessage_ShipConfigNotValid	= TEXT("Ship config is not valid.");
+	FString LogMessage_CellConfigNotValid	= TEXT("Cell config is not valid.");
 	FString LogMessage_ShipBodyMeshNotValid = TEXT("Some ship body mesh is not valid.");
 	
 	// ================================================================================= //
