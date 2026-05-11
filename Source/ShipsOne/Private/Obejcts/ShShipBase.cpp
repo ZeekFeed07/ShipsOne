@@ -115,21 +115,20 @@ void AShShipBase::NormalizeForDirection()
 	switch (Direction)
 	{
 	case EShipDirection::TOP:
-		CurrentLocation += FVector(CellConfig->CellSize.X / 2.f * ((int32)Size - 1), 0.f, 0.f);
+		CurrentLocation += FVector(CellConfig->CellSize.X / 2.f * (int32)Size, 0.f, 0.f);
 		break;
 	case EShipDirection::LEFT:
-		CurrentLocation += FVector(0.f, CellConfig->CellSize.Y / 2.f * ((int32)Size - 1), 0.f);
+		CurrentLocation += FVector(0.f, CellConfig->CellSize.Y / 2.f * (int32)Size, 0.f);
 		break;
 	case EShipDirection::BOTTOM:
-		CurrentLocation += FVector(-CellConfig->CellSize.X / 2.f * ((int32)Size - 1), 0.f, 0.f);
+		CurrentLocation += FVector(-CellConfig->CellSize.X / 2.f * (int32)Size, 0.f, 0.f);
 		break;
 	case EShipDirection::RIGHT:
-		CurrentLocation += FVector(0.f, -CellConfig->CellSize.Y / 2.f * ((int32)Size - 1), 0.f);
+		CurrentLocation += FVector(0.f, -CellConfig->CellSize.Y / 2.f * (int32)Size, 0.f);
 		break;
 	default:
 		return;
 	}
-	UE_LOG(ShLog_Gameplay, Error, TEXT("%f:%f:%f"), CurrentLocation.X, CurrentLocation.Y, CurrentLocation.Z);
 	Body->AddLocalOffset(CurrentLocation);
 }
 

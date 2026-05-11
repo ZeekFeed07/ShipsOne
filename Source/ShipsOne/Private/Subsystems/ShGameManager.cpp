@@ -157,12 +157,14 @@ void UShGameManager::RemoveCurrentShip()
 void UShGameManager::RotateShipClockwise()
 {
 	if (!IsValid(CurrentShip)) return;
+	LastCell = nullptr;
 	CurrentShip->RotateClockwise();
 }
 
 void UShGameManager::RotateShipCounterClockwise()
 {
 	if (!IsValid(CurrentShip)) return;
+	LastCell = nullptr;
 	CurrentShip->RotateCounterClockwise();
 }
 

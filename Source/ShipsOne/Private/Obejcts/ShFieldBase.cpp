@@ -154,7 +154,27 @@ bool AShFieldBase::CreateCells()
 			*GetName());
 		return false;
 	}
-	if (!IsValid(CellConfig->MaterialRef))
+	if (!IsValid(CellConfig->DeadZoneMaterialRef))
+	{
+		UE_LOG(ShLog_Gameplay,
+			Error,
+			TEXT("%s Func: %s. Obj: %s"),
+			*LogMessage_CellMaterialNotValid,
+			TEXT(__FUNCTION__),
+			*GetName());
+		return false;
+	}
+	if (!IsValid(CellConfig->EmptyMaterialRef))
+	{
+		UE_LOG(ShLog_Gameplay,
+			Error,
+			TEXT("%s Func: %s. Obj: %s"),
+			*LogMessage_CellMaterialNotValid,
+			TEXT(__FUNCTION__),
+			*GetName());
+		return false;
+	}
+	if (!IsValid(CellConfig->ShippedMaterialRef))
 	{
 		UE_LOG(ShLog_Gameplay,
 			Error,
@@ -185,13 +205,17 @@ bool AShFieldBase::CreateCells()
 			Position = GetActorLocation()
 				-FVector(FieldHalfX, FieldHalfY, 0)
 				+FVector(CellConfig->CellSize.X * i + CellHalfX, CellHalfY + CellConfig->CellSize.Y * j, 0);
-			CellPtr = World->SpawnActor<AShCellBase>(Position, {});
+
+			CellPtr = World->SpawnActorDeferred<AShCellBase>(AShCellBase::StaticClass(), FTransform(Position));
+			CellPtr->SetMaterialSource(ECellState::DEADZONE, CellConfig->DeadZoneMaterialRef);
+			CellPtr->SetMaterialSource(ECellState::EMPTY, CellConfig->EmptyMaterialRef);
+			CellPtr->SetMaterialSource(ECellState::SHIPPED, CellConfig->ShippedMaterialRef);
+			CellPtr->FinishSpawning(FTransform(Position));
 
 			checkf(IsValid(CellPtr), TEXT("Failed to spawn cell at [%d][%d]"), i, j);
 			
 			CellPtr->ApplyMesh(CellConfig->MeshRef);
 			CellPtr->ScaleMeshBody(CellConfig->ScaleMesh);
-			CellPtr->SetMeshMaterial(CellConfig->MaterialRef);
 
 			SetCell(i, j, CellPtr);
 		}
@@ -232,49 +256,62 @@ bool AShFieldBase::CheckCanPlaceShip(int32 X, int32 Y, EShipDirection Direction,
 {
 	if (!IsValid(FieldConfig))
 	{
-		UE_LOG(ShLog_Gameplay,
-			Error,
-			TEXT("%s Func: %s. Obj: %s"),
-			*LogMessage_FieldConfigNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
+		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s"),
+			*LogMessage_FieldConfigNotValid, TEXT(__FUNCTION__), *GetName());
 		return false;
 	}
 
-	int32 DirIntX;
-	int32 DirIntY;
+	int32 DirX = INDEX_NONE, DirY = INDEX_NONE;
+	if (!GetCoeffByDir(Direction, DirX, DirY)) return false;
 
-	switch (Direction)
+	const int32 Size = static_cast<int32>(ShipSize);
+	const int32 EndX = X + Size * DirX;
+	const int32 EndY = Y + Size * DirY;
+
+	if (!IsInBounds(EndX, FieldConfig->FieldSizeX) || !IsInBounds(EndY, FieldConfig->FieldSizeY))
+		return false;
+
+	for (int32 s = 0; s < Size; ++s)
 	{
-	case EShipDirection::TOP:
-		DirIntX = 0;
-		DirIntY = 1;
-		break;
-	case EShipDirection::RIGHT:
-		DirIntX = -1;
-		DirIntY = 0;
-		break;
-	case EShipDirection::BOTTOM:
-		DirIntX = 0;
-		DirIntY = -1;
-		break;
-	case EShipDirection::LEFT:
-		DirIntX = 1;
-		DirIntY = 0;
-		break;
-	default:
-		return false;
+		if (GetCell(X + s * DirX, Y + s * DirY)->GetState() != ECellState::EMPTY)
+			return false;
 	}
 
-	int32 NewPosX = X + (uint8)ShipSize * DirIntX;
-	int32 NewPosY = Y + (uint8)ShipSize * DirIntY;
-
-	return	(NewPosX > 0 && NewPosX < FieldConfig->FieldSizeX) &&
-			(NewPosY > 0 && NewPosY < FieldConfig->FieldSizeY);
+	return true;
 }
 
 void AShFieldBase::ColorizeAreaPositiveTemporary(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize)
 {
+	if (!IsValid(FieldConfig))
+	{
+		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s"),
+			*LogMessage_FieldConfigNotValid, TEXT(__FUNCTION__), *GetName());
+		return;
+	}
+	if (!CheckCanPlaceShip(X, Y, Direction, ShipSize)) return;
+
+	ResetAllCells();
+
+	int32 DirX = INDEX_NONE, DirY = INDEX_NONE;
+	if (!GetCoeffByDir(Direction, DirX, DirY)) return;
+
+	const int32 Size = (int32)(ShipSize);
+	for (int32 s = 0; s <= Size; ++s)
+	{
+		for (int32 i = -1; i <= 1; ++i)
+		{
+			for (int32 j = -1; j <= 1; ++j)
+			{
+				const int32 NextX = X + i + s * DirX;
+				const int32 NextY = Y + j + s * DirY;
+
+				if (!IsInBounds(NextX, FieldConfig->FieldSizeX) || !IsInBounds(NextY, FieldConfig->FieldSizeY)) continue;
+				if (AShCellBase * Cell = GetCell(NextX, NextY))
+					if (Cell->GetState() == ECellState::EMPTY)	
+						Cell->UpdateStateTemporary(ECellState::DEADZONE);
+			}
+		}
+	}
 }
 
 void AShFieldBase::ColorizeAreaPositiveFinally(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize)
@@ -283,10 +320,22 @@ void AShFieldBase::ColorizeAreaPositiveFinally(int32 X, int32 Y, EShipDirection 
 
 void AShFieldBase::ColorizeAreaNegativeTemporary(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize)
 {
+	ResetAllCells();
 }
 
 void AShFieldBase::ColorizeAreaNegativeFinally(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize)
 {
+}
+
+void AShFieldBase::ResetAllCells()
+{
+	for (int32 i = 0; i < FieldConfig->FieldSizeX; ++i)
+	{
+		for (int32 j = 0; j < FieldConfig->FieldSizeY; ++j)
+		{
+			if (AShCellBase* Cell = GetCell(i, j)) Cell->ResetStateToActual();
+		}
+	}
 }
 
 AShCellBase* AShFieldBase::GetCell(int32 X, int32 Y)
@@ -307,4 +356,31 @@ void AShFieldBase::SetCell(int32 X, int32 Y, AShCellBase* NewItem)
 		X, Y, FieldConfig->FieldSizeX, FieldConfig->FieldSizeY
 	);
 	Field[X * FieldConfig->FieldSizeY + Y] = NewItem;
+}
+
+bool AShFieldBase::GetCoeffByDir(EShipDirection Dir, int32& OutCoeffX, int32& OutCoeffY)
+{
+	switch (Dir)
+	{
+	case EShipDirection::TOP:
+		OutCoeffX = 0;
+		OutCoeffY = 1;
+		break;
+	case EShipDirection::RIGHT:
+		OutCoeffX = -1;
+		OutCoeffY = 0;
+		break;
+	case EShipDirection::BOTTOM:
+		OutCoeffX = 0;
+		OutCoeffY = -1;
+		break;
+	case EShipDirection::LEFT:
+		OutCoeffX = 1;
+		OutCoeffY = 0;
+		break;
+	default:
+		return false;
+	}
+
+	return true;
 }

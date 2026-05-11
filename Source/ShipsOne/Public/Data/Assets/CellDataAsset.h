@@ -20,5 +20,11 @@ public:
 	TObjectPtr<UStaticMesh> MeshRef;
 
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<UMaterialInterface> MaterialRef;
+	TObjectPtr<UMaterialInterface> DeadZoneMaterialRef;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UMaterialInterface> EmptyMaterialRef;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UMaterialInterface> ShippedMaterialRef;
 };

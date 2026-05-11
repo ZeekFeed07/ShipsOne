@@ -31,6 +31,14 @@ enum class EShipDirection : uint8
 	LEFT = 3
 };
 
+UENUM(BlueprintType)
+enum class ECellState : uint8
+{
+	EMPTY = 0,
+	DEADZONE = 1,
+	SHIPPED = 2
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllowFieldCreation);
 DECLARE_DYNAMIC_DELEGATE(FOnAllowFieldCreationNotMulticast);
 
