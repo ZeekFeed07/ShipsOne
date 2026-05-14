@@ -36,10 +36,14 @@ enum class ECellState : uint8
 {
 	EMPTY = 0,
 	DEADZONE = 1,
-	SHIPPED = 2
+	SHIPPED = 2,
+	FORBIDDEN = 3
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllowFieldCreation);
-DECLARE_DYNAMIC_DELEGATE(FOnAllowFieldCreationNotMulticast);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllowCreation);
+DECLARE_DYNAMIC_DELEGATE(FOnAllowCreationNotMulticast);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllowShipCreation, const EShipSize, ShipSize);
+DECLARE_DYNAMIC_DELEGATE_OneParam(FOnAllowShipCreationNotMulticast, const EShipSize, ShipSize);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnShipsNumStateSignature, EShipSize, ShipSize, int32, CurrentShipsNum);

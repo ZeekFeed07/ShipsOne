@@ -27,4 +27,7 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UMaterialInterface> ShippedMaterialRef;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UMaterialInterface> ForbiddenMaterialRef;
 };

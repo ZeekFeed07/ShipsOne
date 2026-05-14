@@ -60,7 +60,11 @@ void AShFieldBase::BeginInit()
 
 void AShFieldBase::ShipHoverOn(AShCellBase* CellPtr, AShShipBase* ShipPtr)
 {
-	if (!IsValid(ShipPtr) || !IsValid(CellPtr) || !Field.Contains(CellPtr)) return;
+	if (!IsValid(ShipPtr) || !IsValid(CellPtr) || !Field.Contains(CellPtr))
+	{
+		ResetAllCells();
+		return;
+	}
 	if (!IsValid(FieldConfig))
 	{
 		UE_LOG(ShLog_Gameplay,
@@ -184,6 +188,16 @@ bool AShFieldBase::CreateCells()
 			*GetName());
 		return false;
 	}
+	if (!IsValid(CellConfig->ForbiddenMaterialRef))
+	{
+		UE_LOG(ShLog_Gameplay,
+			Error,
+			TEXT("%s Func: %s. Obj: %s"),
+			*LogMessage_CellMaterialNotValid,
+			TEXT(__FUNCTION__),
+			*GetName());
+		return false;
+	}
 
 	ClearCells();
 
@@ -210,6 +224,7 @@ bool AShFieldBase::CreateCells()
 			CellPtr->SetMaterialSource(ECellState::DEADZONE, CellConfig->DeadZoneMaterialRef);
 			CellPtr->SetMaterialSource(ECellState::EMPTY, CellConfig->EmptyMaterialRef);
 			CellPtr->SetMaterialSource(ECellState::SHIPPED, CellConfig->ShippedMaterialRef);
+			CellPtr->SetMaterialSource(ECellState::FORBIDDEN, CellConfig->ForbiddenMaterialRef);
 			CellPtr->FinishSpawning(FTransform(Position));
 
 			checkf(IsValid(CellPtr), TEXT("Failed to spawn cell at [%d][%d]"), i, j);
@@ -321,6 +336,28 @@ void AShFieldBase::ColorizeAreaPositiveFinally(int32 X, int32 Y, EShipDirection 
 void AShFieldBase::ColorizeAreaNegativeTemporary(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize)
 {
 	ResetAllCells();
+
+	int32 DirX = INDEX_NONE, DirY = INDEX_NONE;
+	if (!GetCoeffByDir(Direction, DirX, DirY)) return;
+
+	const int32 Size = (int32)(ShipSize);
+	for (int32 s = 0; s <= Size; ++s)
+	{
+		for (int32 i = -1; i <= 1; ++i)
+		{
+			for (int32 j = -1; j <= 1; ++j)
+			{
+				const int32 NextX = X + i + s * DirX;
+				const int32 NextY = Y + j + s * DirY;
+
+				if (!IsInBounds(NextX, FieldConfig->FieldSizeX) || !IsInBounds(NextY, FieldConfig->FieldSizeY)) continue;
+				if (AShCellBase* Cell = GetCell(NextX, NextY))
+				{
+					Cell->UpdateStateTemporary(ECellState::FORBIDDEN);
+				}
+			}
+		}
+	}
 }
 
 void AShFieldBase::ColorizeAreaNegativeFinally(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize)

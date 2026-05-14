@@ -54,15 +54,21 @@ private:
 	virtual void StartPlayerFieldCreation();
 
 	UFUNCTION()
+	virtual void OnShipCreationApproved(const EShipSize ShipSize);
+
+	UFUNCTION()
 	virtual bool CheckCanCreateShip(EShipSize ShipSize);
 
 	UFUNCTION()
 	virtual AShShipBase* SpawnShip(const EShipSize ShipSize);
 
+	UFUNCTION()
 	virtual void RemoveShip(AShShipBase*& ShipToRemove);
 
+	UFUNCTION()
 	virtual void IncreaseShipNum(EShipSize ShipSize);
 
+	UFUNCTION()
 	virtual void DecreaseShipNum(EShipSize ShipSize);
 
 
@@ -87,14 +93,11 @@ private:
 
 	FHitResult CurrentHit;
 
-	AShCellBase* LastCell;
+	AShCellBase* LastCell = nullptr;
 	
 	// ================================================================================ //
 
 	// ==================================== Common ==================================== //
-
-	UPROPERTY()
-	TMap<EShipSize, int32> ShipsNum;
 
 	UPROPERTY()
 	TArray<AShShipBase*> CreatedShips;
@@ -109,7 +112,7 @@ private:
 	TObjectPtr<APlayerState> StateRef;
 
 	UPROPERTY()
-	FOnAllowFieldCreationNotMulticast OnCreateFieldAllowed;
+	TMap<EShipSize, int32> ShipsNum;
 
 	UPROPERTY()
 	TObjectPtr<AShFieldBase> SelfField;
@@ -119,6 +122,12 @@ private:
 
 	UPROPERTY()
 	AShShipBase* CurrentShip;
+
+	UPROPERTY()
+	FOnAllowCreationNotMulticast OnAllowFieldCreation;
+	
+	UPROPERTY()
+	FOnAllowShipCreationNotMulticast OnAllowShipCreation;
 
 	// ================================================================================ //
 
@@ -154,7 +163,7 @@ private:
 
 	FString LogMessage_WorldNotValid					= TEXT("World is not valid.");
 	FString LogMessage_ControllerNotValid				= TEXT("Player controller is not valid.");
-	FString LogMessage_ControllerNotImplementsInterface	= TEXT("Player controller is not valid.");
+	FString LogMessage_ControllerNotImplementsInterface	= TEXT("Player controller does not implements necessary interface.");
 	FString LogMessage_PlayerStateNotValid				= TEXT("Player state is not valid or not implements interface.");
 	FString LogMessage_PawnNotValid						= TEXT("Player Pawn is not valid.");
 	FString LogMessage_ShipNotValid						= TEXT("Ship is not valid.");

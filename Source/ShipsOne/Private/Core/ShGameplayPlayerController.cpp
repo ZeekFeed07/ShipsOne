@@ -16,6 +16,16 @@ AShGameplayPlayerController::AShGameplayPlayerController()
 	LoadControllerConfig();
 }
 
+void AShGameplayPlayerController::RequestShipCreation_Implementation(EShipSize ShipSize)
+{
+	ServerRequestShipCreation(ShipSize);
+}
+
+void AShGameplayPlayerController::ApproveFieldCreation_Implementation()
+{
+	ClientCreateFieldApproved();
+}
+
 void AShGameplayPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -250,6 +260,23 @@ void AShGameplayPlayerController::SetupInputMode()
 	bShowMouseCursor = true;
 }
 
+void AShGameplayPlayerController::ServerRequestShipCreation_Implementation(const EShipSize ShipSize)
+{
+	// todo: потом надо сделать валидацию
+
+	ClientCreateShipApproved(ShipSize);
+}
+
+void AShGameplayPlayerController::ClientCreateFieldApproved_Implementation()
+{
+	OnCreateFieldAllowed.Broadcast();
+}
+
+void AShGameplayPlayerController::ClientCreateShipApproved_Implementation(const EShipSize ShipSize)
+{
+	OnCreateShipAllowed.Broadcast(ShipSize);
+}
+
 void AShGameplayPlayerController::ApplyCameraActionsInputContext_Implementation()
 {
 	if (!IsLocalController()) return;
@@ -347,6 +374,21 @@ void AShGameplayPlayerController::RemoveShipPlacementInputContext_Implementation
 	}
 
 	EnhancedSubsystem->RemoveMappingContext(ControllerConfig->ShipPlacementContext);
+}
+
+void AShGameplayPlayerController::BindToFieldCreation_Implementation(const FOnAllowCreationNotMulticast& Event)
+{
+	OnCreateFieldAllowed.Add(Event);
+}
+
+void AShGameplayPlayerController::UnbindFromFieldCreation_Implementation(const FOnAllowCreationNotMulticast& Event)
+{
+	OnCreateFieldAllowed.Remove(Event);
+}
+
+void AShGameplayPlayerController::BindToShipCreation_Implementation(const FOnAllowShipCreationNotMulticast& Event)
+{
+	OnCreateShipAllowed.Add(Event);
 }
 
 void AShGameplayPlayerController::ServerControllerReadyRPC_Implementation()

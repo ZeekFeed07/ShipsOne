@@ -4,6 +4,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Interfaces/GameplayNetworkInterface.h"
 #include "Interfaces/GameplayControllerInterface.h"
+#include "Data/GameplayData.h"
 #include "ShGameplayPlayerController.generated.h"
 
 class UShGameManager;
@@ -23,9 +24,25 @@ public:
 	AShGameplayPlayerController();
 
 public:
+	// ========================= IGameplayController Interface ========================= //
+
 	virtual void ApplyCameraActionsInputContext_Implementation() override;
 	virtual void ApplyShipPlacementInputContext_Implementation() override;
 	virtual void RemoveShipPlacementInputContext_Implementation() override;
+
+	virtual void BindToFieldCreation_Implementation(const FOnAllowCreationNotMulticast& Event) override;
+	virtual void UnbindFromFieldCreation_Implementation(const FOnAllowCreationNotMulticast& Event) override;
+	virtual void BindToShipCreation_Implementation(const FOnAllowShipCreationNotMulticast& Event) override;
+
+	// ================================================================================= //
+
+	// ========================= IGameplayNetwork Interface ========================= //
+
+	virtual void RequestShipCreation_Implementation(EShipSize ShipSize) override;
+	virtual void ApproveFieldCreation_Implementation() override;
+	
+	// ============================================================================== //
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -65,8 +82,30 @@ private:
 
 	UFUNCTION(Server, Reliable)
 	void ServerControllerReadyRPC();
+	virtual void ServerControllerReadyRPC_Implementation();
+
+	UFUNCTION(Server, Reliable)
+	void ServerRequestShipCreation(const EShipSize ShipSize);
+	virtual void ServerRequestShipCreation_Implementation(const EShipSize ShipSize);
+
+	UFUNCTION(Client, Reliable)
+	void ClientCreateFieldApproved();
+	virtual void ClientCreateFieldApproved_Implementation();
+	
+	UFUNCTION(Client, Reliable)
+	void ClientCreateShipApproved(const EShipSize ShipSize);
+	virtual void ClientCreateShipApproved_Implementation(const EShipSize ShipSize);
 
 	// ================================================================================//
+
+public:
+
+	UPROPERTY()
+	FOnAllowCreation OnCreateFieldAllowed;
+
+	UPROPERTY()
+	FOnAllowShipCreation OnCreateShipAllowed;
+
 private:
 	// ==================================== Common ==================================== //
 	

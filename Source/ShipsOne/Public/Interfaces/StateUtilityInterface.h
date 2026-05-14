@@ -17,12 +17,15 @@ class SHIPSONE_API IStateUtilityInterface
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintNativeEvent)
-	void AllowToCreateField();
+	//UFUNCTION(BlueprintNativeEvent)
+	//void AllowToCreateField();
 
-	UFUNCTION(BlueprintNativeEvent)
-	void BindToFieldCreationPermission(const FOnAllowFieldCreationNotMulticast& Event);
+	//UFUNCTION(BlueprintNativeEvent)
+	//void BindToFieldCreationPermission(const FOnAllowCreationNotMulticast& Event);
 
-	UFUNCTION(BlueprintNativeEvent)
-	void UnbindFromFieldCreationPermission(const FOnAllowFieldCreationNotMulticast& Event);
+	//UFUNCTION(BlueprintNativeEvent)
+	//void UnbindFromFieldCreationPermission(const FOnAllowCreationNotMulticast& Event);
+
+	//UFUNCTION(BlueprintNativeEvent)
+	//void AllowToCreateShip();
 };

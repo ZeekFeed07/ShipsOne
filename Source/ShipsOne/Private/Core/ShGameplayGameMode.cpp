@@ -4,6 +4,7 @@
 #include "Core/ShMainPlayerState.h"
 #include "Core/CoreManager.h"
 #include "Interfaces/StateUtilityInterface.h"
+#include "Interfaces/GameplayNetworkInterface.h"
 #include "Data/GameplayData.h"
 
 #include "Obejcts/AIBot.h"
@@ -74,19 +75,16 @@ void AShGameplayGameMode::SendPrepareField(APlayerController* PC)
 			*GetName());
 		return;
 	}
-
-	APlayerState* StateRef = PC->GetPlayerState<APlayerState>();
-
-	if (!IsValid(StateRef) || !StateRef->Implements<UStateUtilityInterface>())
+	if (!PC->Implements<UGameplayNetworkInterface>())
 	{
 		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_StateNotValid,
+			*LogMessage_ControllerNotImplementsInterface,
 			TEXT(__FUNCTION__),
 			*GetName());
 		return;
 	}
-
-	IStateUtilityInterface::Execute_AllowToCreateField(StateRef);
+	
+	IGameplayNetworkInterface::Execute_ApproveFieldCreation(PC);
 }
 
 bool AShGameplayGameMode::InitializeGameManagerMulti()

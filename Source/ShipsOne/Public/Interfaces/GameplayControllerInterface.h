@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "Data/GameplayData.h"
 
 #include "GameplayControllerInterface.generated.h"
 
@@ -24,5 +25,16 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	void RemoveShipPlacementInputContext();
-	
+
+	UFUNCTION(BlueprintNativeEvent)
+	void BindToFieldCreation(const FOnAllowCreationNotMulticast& Event);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void UnbindFromFieldCreation(const FOnAllowCreationNotMulticast& Event);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void BindToShipCreation(const FOnAllowShipCreationNotMulticast& Event);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void UnbindFromShipCreation(const FOnAllowShipCreationNotMulticast& Event);
 };
