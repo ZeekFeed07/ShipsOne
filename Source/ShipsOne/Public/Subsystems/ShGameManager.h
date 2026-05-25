@@ -41,6 +41,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void RemoveCurrentShip();
+
+	UFUNCTION(BlueprintCallable)
+	virtual void RemoveAllShips();
 	
 	UFUNCTION()
 	virtual void RotateShipClockwise();
@@ -59,6 +62,9 @@ public:
 
 	UFUNCTION()
 	virtual void PullHoveredShip();
+
+	UFUNCTION(BlueprintCallable)
+	virtual void ShuffleShips();
 
 private:
 
@@ -182,21 +188,4 @@ private:
 	const FString CellConfigPath	= TEXT("/Game/ShipsOne/Dev/Data/DataAssets/DA_MainCellInfo.DA_MainCellInfo");
 
 	// =============================================================================== //
-
-	// ==================================== Logging ==================================== //
-
-	FString LogMessage_WorldNotValid					= TEXT("World is not valid.");
-	FString LogMessage_ControllerNotValid				= TEXT("Player controller is not valid.");
-	FString LogMessage_ControllerNotImplementsInterface	= TEXT("Player controller does not implements necessary interface.");
-	FString LogMessage_PlayerStateNotValid				= TEXT("Player state is not valid or not implements interface.");
-	FString LogMessage_PawnNotValid						= TEXT("Player Pawn is not valid.");
-	FString LogMessage_ShipNotValid						= TEXT("Ship is not valid.");
-	FString LogMessage_CursorNotValid					= TEXT("Mouse cursor is not valid.");
-	FString LogMessage_ShipSizeNotValid					= TEXT("Ship size is not valid.");
-	FString LogMessage_ShipConfigNotValid				= TEXT("Ship config is not valid.");
-	FString LogMessage_WidgetConfigNotValid				= TEXT("Widget config is not valid.");
-	FString LogMessage_ShipPlacementWidgetNotValid		= TEXT("Ship placement widget is not valid.");
-	FString LogMessage_CannotCreateShip					= TEXT("Cannot to create a ship.");
-	
-	// ================================================================================= //
 };

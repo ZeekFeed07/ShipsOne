@@ -107,15 +107,4 @@ private:
 	TObjectPtr<UCellDataAsset> CellConfig;
 
 	// ================================================================================ //
-
-	// ==================================== Logging ==================================== //
-
-	FString LogMessage_WorldNotValid			= TEXT("World is not valid.");
-	FString LogMessage_CellConfigNotValid		= TEXT("Cell config is not valid.");
-	FString LogMessage_CellMeshNotValid			= TEXT("Cell mesh is not valid.");
-	FString LogMessage_CellMaterialNotValid		= TEXT("Some cell material is not valid.");
-	FString LogMessage_FieldConfigNotValid		= TEXT("Field config is not valid.");
-	FString LogMessage_ZeroDividing				= TEXT("Dividing by zero.");
-	
-	// ================================================================================= //
 };

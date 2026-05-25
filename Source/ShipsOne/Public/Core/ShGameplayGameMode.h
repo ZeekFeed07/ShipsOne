@@ -55,16 +55,5 @@ private:
 
 	// ================================================================================ //
 
-	// ==================================== Logging ==================================== //
-
-	FString LogMessage_ControllerNotValid				= TEXT("Player controller is not valid.");
-	FString LogMessage_ControllerNotImplementsInterface = TEXT("Player controller does not implements necessary interface.");
-	FString LogMessage_StateNotValid					= TEXT("Player state is not valid or not implements interface.");
-	FString LogMessage_ControllerAlreadySet				= TEXT("Player controller is already set.");
-	FString LogMessage_MoreThan2Detected				= TEXT("More than 2 players detected.");
-	FString LogMessage_GameManagerInitFailure			= TEXT("Game manager initialization failed.");
-
-	// ================================================================================= //
-
 };
 	

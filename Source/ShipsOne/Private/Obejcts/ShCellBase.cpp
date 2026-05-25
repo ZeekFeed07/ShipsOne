@@ -28,18 +28,8 @@ void AShCellBase::Tick(float DeltaTime)
 
 void AShCellBase::ApplyMesh(UStaticMesh* MeshBody)
 {
-	if (!IsValid(MeshBody))
-	{
-		UE_LOG(
-			ShLog_Gameplay,
-			Error,
-			TEXT("%s Func: %s. Obj: %s"),
-			*LogMessage_MeshPtrNotValid,
-			TEXT(__FUNCTION__),
-			*GetName()
-		);
-		return;
-	}
+	SH_VALIDATE(IsValid(MeshBody), LogMessage::MeshPtrNotValid);
+
 	Mesh->SetStaticMesh(MeshBody);
 }
 
@@ -50,36 +40,15 @@ void AShCellBase::ScaleMeshBody(const FVector& Scale)
 
 void AShCellBase::SetMaterialSource(ECellState StateForMaterial, UMaterialInterface* Material) 
 {
-	if (!IsValid(Material))
-	{
-		UE_LOG(
-			ShLog_Gameplay,
-			Error,
-			TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_MaterialPtrNotValid,
-			TEXT(__FUNCTION__),
-			*GetName()
-		);
-		return;
-	}
+	SH_VALIDATE(IsValid(Material), LogMessage::MaterialPtrNotValid);
 
 	StateMaterialCorrespondence.Add({ StateForMaterial, Material });
 }
 
 void AShCellBase::SetMeshMaterial(UMaterialInterface* Material)
 {
-	if (!IsValid(Material))
-	{
-		UE_LOG(
-			ShLog_Gameplay,
-			Error,
-			TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_MaterialPtrNotValid,
-			TEXT(__FUNCTION__),
-			*GetName()
-		);
-		return;
-	}
+	SH_VALIDATE(IsValid(Material), LogMessage::MaterialPtrNotValid);
+
 	Mesh->SetMaterial(0, Material);
 }
 

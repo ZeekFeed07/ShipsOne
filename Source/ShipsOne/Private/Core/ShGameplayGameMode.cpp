@@ -20,32 +20,9 @@ AShGameplayGameMode::AShGameplayGameMode()
 
 void AShGameplayGameMode::PlayerReady(APlayerController* PC)
 {
-	if (PlayersReadiness.Num() >= 2)
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_MoreThan2Detected,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-
-	if (!IsValid(PC))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ControllerNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-
-	if (PlayersReadiness.Contains(PC))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ControllerAlreadySet,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(PlayersReadiness.Num() <= 2, LogMessage::MoreThan2Detected);
+	SH_VALIDATE(IsValid(PC), LogMessage::ControllerNotValid);
+	SH_VALIDATE(!PlayersReadiness.Contains(PC), LogMessage::ControllerAlreadySet);
 
 	PlayersReadiness.Add({PC, true});
 
@@ -67,22 +44,8 @@ void AShGameplayGameMode::PlayerReady(APlayerController* PC)
 
 void AShGameplayGameMode::SendPrepareField(APlayerController* PC)
 {
-	if (!IsValid(PC))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ControllerNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!PC->Implements<UGameplayNetworkInterface>())
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ControllerNotImplementsInterface,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(PC), LogMessage::ControllerNotValid);
+	SH_VALIDATE(PC->Implements<UGameplayNetworkInterface>(), LogMessage::ControllerNotImplementsInterface);
 	
 	IGameplayNetworkInterface::Execute_ApproveFieldCreation(PC);
 }
@@ -97,14 +60,7 @@ bool AShGameplayGameMode::InitializeGameManagerSolo()
 {
 	GameManager = NewObject<UCoreManager>(this);
 
-	if (!IsValid(GameManager))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_GameManagerInitFailure,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return false;
-	}
+	SH_VALIDATE_RET(IsValid(GameManager), LogMessage::GameManagerInitFailure, false);
 
 	GameManager->InitializeSoloGameplay(PlayersReadiness[0].PCRef);
 	

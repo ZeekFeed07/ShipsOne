@@ -94,15 +94,4 @@ private:
 	int32 PlacedY = INDEX_NONE;
 
 	// ================================================================================ //
-
-	// ==================================== Logging ==================================== //
-
-	FString LogMessage_BodyMeshNotValid				= TEXT("Body mesh is not valid.");
-	FString LogMessage_ShipConfigNotValid			= TEXT("Ship config is not valid.");
-	FString LogMessage_CellConfigNotValid			= TEXT("Cell config is not valid.");
-	FString LogMessage_ShipBodyMeshNotValid			= TEXT("Some ship body mesh is not valid.");
-	FString LogMessage_ShipOutlineMaterialNotValid	= TEXT("Some ship body mesh is not valid.");
-	
-	// ================================================================================= //
-
 };

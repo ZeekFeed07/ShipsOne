@@ -61,12 +61,4 @@ private:
 	TMap<ECellState, UMaterialInterface*> StateMaterialCorrespondence;
 
 	// ================================================================================ //
-	
-	// ==================================== Logging ==================================== //
-
-	FString LogMessage_FindingCellMeshFailure	= TEXT("Unnable to find cell mesh by path.");
-	FString LogMessage_MeshPtrNotValid			= TEXT("Mesh pointer not valid while applying.");
-	FString LogMessage_MaterialPtrNotValid		= TEXT("Material pointer not valid.");
-	
-	// ================================================================================= //
 };

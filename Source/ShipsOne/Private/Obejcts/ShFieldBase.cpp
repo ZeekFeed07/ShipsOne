@@ -19,7 +19,7 @@ void AShFieldBase::PlaceInCenter()
 
 void AShFieldBase::PlaceInLeft()
 {
-	SH_VALIDATE(IsValid(FieldConfig), LogMessage_FieldConfigNotValid);
+	SH_VALIDATE(IsValid(FieldConfig), LogMessage::FieldConfigNotValid);
 
 	float FieldX = FieldConfig->FieldSizeX * CellConfig->CellSize.X / 2.f;
 	float FieldY = FieldConfig->FieldSizeY * CellConfig->CellSize.Y / 2.f;
@@ -28,7 +28,7 @@ void AShFieldBase::PlaceInLeft()
 
 void AShFieldBase::PlaceInRight()
 {
-	SH_VALIDATE(IsValid(FieldConfig), LogMessage_FieldConfigNotValid);
+	SH_VALIDATE(IsValid(FieldConfig), LogMessage::FieldConfigNotValid);
 
 	float FieldX = FieldConfig->FieldSizeX * CellConfig->CellSize.X / 2.f;
 	float FieldY = FieldConfig->FieldSizeY * CellConfig->CellSize.Y / 2.f;
@@ -103,7 +103,7 @@ void AShFieldBase::RemoveShip(AShShipBase* ShipPtr)
 		return;
 	}
 
-	SH_VALIDATE(IsValid(FieldConfig), LogMessage_FieldConfigNotValid);
+	SH_VALIDATE(IsValid(FieldConfig), LogMessage::FieldConfigNotValid);
 
 	const int32 Size = static_cast<int32>(ShipPtr->GetShipSize());
 
@@ -158,14 +158,14 @@ bool AShFieldBase::CreateCells()
 {
 	UWorld* World = GetWorld();
 
-	SH_VALIDATE_RET(IsValid(World), LogMessage_WorldNotValid, false);
-	SH_VALIDATE_RET(IsValid(FieldConfig), LogMessage_FieldConfigNotValid, false);
-	SH_VALIDATE_RET(IsValid(CellConfig), LogMessage_CellConfigNotValid, false);
-	SH_VALIDATE_RET(IsValid(CellConfig->MeshRef), LogMessage_CellMeshNotValid, false);
-	SH_VALIDATE_RET(IsValid(CellConfig->DeadZoneMaterialRef), LogMessage_CellMaterialNotValid, false);
-	SH_VALIDATE_RET(IsValid(CellConfig->EmptyMaterialRef), LogMessage_CellMaterialNotValid, false);
-	SH_VALIDATE_RET(IsValid(CellConfig->ShippedMaterialRef), LogMessage_CellMaterialNotValid, false);
-	SH_VALIDATE_RET(IsValid(CellConfig->ForbiddenMaterialRef), LogMessage_CellMaterialNotValid, false);
+	SH_VALIDATE_RET(IsValid(World), LogMessage::WorldNotValid, false);
+	SH_VALIDATE_RET(IsValid(FieldConfig), LogMessage::FieldConfigNotValid, false);
+	SH_VALIDATE_RET(IsValid(CellConfig), LogMessage::CellConfigNotValid, false);
+	SH_VALIDATE_RET(IsValid(CellConfig->MeshRef), LogMessage::CellMeshNotValid, false);
+	SH_VALIDATE_RET(IsValid(CellConfig->DeadZoneMaterialRef), LogMessage::CellMaterialNotValid, false);
+	SH_VALIDATE_RET(IsValid(CellConfig->EmptyMaterialRef), LogMessage::CellMaterialNotValid, false);
+	SH_VALIDATE_RET(IsValid(CellConfig->ShippedMaterialRef), LogMessage::CellMaterialNotValid, false);
+	SH_VALIDATE_RET(IsValid(CellConfig->ForbiddenMaterialRef), LogMessage::CellMaterialNotValid, false);
 
 	ClearCells();
 
@@ -237,7 +237,7 @@ void AShFieldBase::ClearCells()
 
 bool AShFieldBase::CheckCanPlaceShip(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize)
 {
-	SH_VALIDATE_RET(IsValid(FieldConfig), LogMessage_FieldConfigNotValid, false);
+	SH_VALIDATE_RET(IsValid(FieldConfig), LogMessage::FieldConfigNotValid, false);
 
 	int32 DirX = INDEX_NONE, DirY = INDEX_NONE;
 	if (!GetCoeffByDir(Direction, DirX, DirY)) return false;
@@ -260,7 +260,7 @@ bool AShFieldBase::CheckCanPlaceShip(int32 X, int32 Y, EShipDirection Direction,
 
 void AShFieldBase::ColorizeAreaPositiveTemporary(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize)
 {
-	SH_VALIDATE(IsValid(FieldConfig), LogMessage_FieldConfigNotValid);
+	SH_VALIDATE(IsValid(FieldConfig), LogMessage::FieldConfigNotValid);
 
 	if (!CheckCanPlaceShip(X, Y, Direction, ShipSize)) return;
 
@@ -326,7 +326,7 @@ void AShFieldBase::ColorizeAreaPositiveFinally(int32 X, int32 Y, EShipDirection 
 
 void AShFieldBase::ColorizeAreaNegativeTemporary(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize)
 {
-	SH_VALIDATE(FieldConfig, LogMessage_FieldConfigNotValid);
+	SH_VALIDATE(FieldConfig, LogMessage::FieldConfigNotValid);
 
 	ResetAllCells();
 
@@ -355,7 +355,7 @@ void AShFieldBase::ColorizeAreaNegativeTemporary(int32 X, int32 Y, EShipDirectio
 
 void AShFieldBase::ResetAllCells()
 {
-	SH_VALIDATE(FieldConfig, LogMessage_FieldConfigNotValid);
+	SH_VALIDATE(FieldConfig, LogMessage::FieldConfigNotValid);
 
 	for (int32 i = 0; i < FieldConfig->FieldSizeX; ++i)
 	{
@@ -368,7 +368,7 @@ void AShFieldBase::ResetAllCells()
 
 bool AShFieldBase::IsShipNearCell(int32 X, int32 Y)
 {
-	SH_VALIDATE_RET(FieldConfig, LogMessage_FieldConfigNotValid, false);
+	SH_VALIDATE_RET(FieldConfig, LogMessage::FieldConfigNotValid, false);
 
 	for (int32 i = -1; i <= 1; ++i)
 	{
@@ -387,8 +387,8 @@ bool AShFieldBase::IsShipNearCell(int32 X, int32 Y)
 
 void AShFieldBase::ConvertID(const int32 ID, int32& X, int32& Y)
 {
-	SH_VALIDATE(IsValid(FieldConfig), LogMessage_FieldConfigNotValid);
-	SH_VALIDATE(FieldConfig->FieldSizeY != 0, LogMessage_ZeroDividing);
+	SH_VALIDATE(IsValid(FieldConfig), LogMessage::FieldConfigNotValid);
+	SH_VALIDATE(FieldConfig->FieldSizeY != 0, LogMessage::ZeroDividing);
 
 	X = ID / FieldConfig->FieldSizeY;
 	Y = ID % FieldConfig->FieldSizeY;

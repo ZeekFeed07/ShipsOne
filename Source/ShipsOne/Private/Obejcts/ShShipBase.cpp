@@ -33,12 +33,12 @@ void AShShipBase::Tick(float DeltaTime)
 
 void AShShipBase::SetShipSize(const EShipSize ShipSize)
 {
-	SH_VALIDATE(IsValid(ShipConfig), LogMessage_ShipConfigNotValid);
+	SH_VALIDATE(IsValid(ShipConfig), LogMessage::ShipConfigNotValid);
 	SH_VALIDATE(IsValid(ShipConfig->Size1Body) &&
 				IsValid(ShipConfig->Size2Body) &&
 				IsValid(ShipConfig->Size3Body) &&
 				IsValid(ShipConfig->Size4Body), 
-				LogMessage_ShipBodyMeshNotValid);
+				LogMessage::ShipBodyMeshNotValid);
 
 	switch (ShipSize)
 	{
@@ -100,7 +100,7 @@ void AShShipBase::SetCollision(bool bCollision)
 
 void AShShipBase::NormalizeForDirection()
 {
-	SH_VALIDATE(IsValid(CellConfig), LogMessage_CellConfigNotValid);
+	SH_VALIDATE(IsValid(CellConfig), LogMessage::CellConfigNotValid);
 
 	FVector CurrentLocation = FVector::ZeroVector;
 
@@ -154,8 +154,8 @@ void AShShipBase::GetPlacedCellID(int32& X, int32& Y)
 
 void AShShipBase::UpdateOutline(bool bEnable)
 {
-	SH_VALIDATE(ShipConfig, LogMessage_ShipConfigNotValid);
-	SH_VALIDATE(ShipConfig->OutlineMaterial, LogMessage_ShipOutlineMaterialNotValid);
+	SH_VALIDATE(ShipConfig, LogMessage::ShipConfigNotValid);
+	SH_VALIDATE(ShipConfig->OutlineMaterial, LogMessage::ShipOutlineMaterialNotValid);
 
 	UMaterialInterface* Mat = bEnable ? ShipConfig->OutlineMaterial : nullptr;
 	Body->SetOverlayMaterial(Mat);
