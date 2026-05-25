@@ -42,4 +42,7 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	float SnapToCursorInterpolationSpeed = 5.f;
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInterface* OutlineMaterial = nullptr;
 };

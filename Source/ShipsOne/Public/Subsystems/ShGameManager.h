@@ -37,7 +37,7 @@ public:
 	virtual void SetupPlayerStateRef(APlayerState* PS);
 	
 	UFUNCTION(BlueprintCallable)
-	virtual void MakeShip(const EShipSize ShipSize = EShipSize::ONE);
+	virtual void RequestShipCreation(const EShipSize ShipSize = EShipSize::ONE);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void RemoveCurrentShip();
@@ -48,13 +48,19 @@ public:
 	UFUNCTION()
 	virtual void RotateShipCounterClockwise();
 
-private:
-
 	UFUNCTION()
 	virtual void StartPlayerFieldCreation();
 
 	UFUNCTION()
-	virtual void OnShipCreationApproved(const EShipSize ShipSize);
+	virtual void MakeShip(const EShipSize ShipSize);
+
+	UFUNCTION()
+	virtual void PlaceShip();
+
+	UFUNCTION()
+	virtual void PullHoveredShip();
+
+private:
 
 	UFUNCTION()
 	virtual bool CheckCanCreateShip(EShipSize ShipSize);
@@ -71,29 +77,47 @@ private:
 	UFUNCTION()
 	virtual void DecreaseShipNum(EShipSize ShipSize);
 
+	UFUNCTION()
+	virtual void UpdateShipsCollision(bool bEnable);
+
 
 	// ==================================== Ticks ==================================== //
 	
 	virtual void TraceUnderCursor(float DeltaSeconds);
 	virtual void SnapShipToCursor(float DeltaSeconds);
 	virtual void CheckCellUnderCursor(float DeltaSeconds);
+	virtual void CheckShipUnderCursor(float DeltaSeconds);
+
+	virtual void AddTickTask(FTickTask TaskToAdd);
+	virtual void RemoveTickTask(FTickTask TaskToRemove);
 
 	// =============================================================================== //
 
 	UFUNCTION()
 	virtual void CreateShipPlacingWidget();
 
+	bool Debug_CheckShipsNum();
+
 public:
 	UPROPERTY(BlueprintAssignable)
 	FOnShipsNumStateSignature OnShipsNumStateChange;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnGameReadySignature OnGameReady;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnShipHandle OnShipCaptured;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnShipHandle OnShipReleased;
+
 private:
 	// ==================================== System ==================================== //
 
 	TArray<FTickTask> TickTasks;
 
+	UPROPERTY()
 	FHitResult CurrentHit;
-
-	AShCellBase* LastCell = nullptr;
 	
 	// ================================================================================ //
 
@@ -121,13 +145,13 @@ private:
 	TObjectPtr<AShFieldBase> EnemyField;
 
 	UPROPERTY()
-	AShShipBase* CurrentShip;
+	AShShipBase* CurrentShip = nullptr;
 
 	UPROPERTY()
-	FOnAllowCreationNotMulticast OnAllowFieldCreation;
-	
+	AShShipBase* HoveredShip = nullptr;
+
 	UPROPERTY()
-	FOnAllowShipCreationNotMulticast OnAllowShipCreation;
+	AShCellBase* LastCell = nullptr;
 
 	// ================================================================================ //
 

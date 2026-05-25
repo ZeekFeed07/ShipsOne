@@ -24,17 +24,11 @@ public:
 	void ApplyShipPlacementInputContext();
 
 	UFUNCTION(BlueprintNativeEvent)
+	void ApplyShipRemovementInputContext();
+
+	UFUNCTION(BlueprintNativeEvent)
 	void RemoveShipPlacementInputContext();
 
 	UFUNCTION(BlueprintNativeEvent)
-	void BindToFieldCreation(const FOnAllowCreationNotMulticast& Event);
-
-	UFUNCTION(BlueprintNativeEvent)
-	void UnbindFromFieldCreation(const FOnAllowCreationNotMulticast& Event);
-
-	UFUNCTION(BlueprintNativeEvent)
-	void BindToShipCreation(const FOnAllowShipCreationNotMulticast& Event);
-
-	UFUNCTION(BlueprintNativeEvent)
-	void UnbindFromShipCreation(const FOnAllowShipCreationNotMulticast& Event);
+	void RemoveShipRemovementInputContext();
 };

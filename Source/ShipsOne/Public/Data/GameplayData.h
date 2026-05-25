@@ -47,3 +47,14 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllowShipCreation, const EShipSiz
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnAllowShipCreationNotMulticast, const EShipSize, ShipSize);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnShipsNumStateSignature, EShipSize, ShipSize, int32, CurrentShipsNum);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShipHandle);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameReadySignature);
+
+#define SH_VALIDATE_RET(Cond, Msg, RetVal) \
+    if (!(Cond)) { UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."), \
+        *Msg, TEXT(__FUNCTION__), *GetName()); return RetVal; }
+
+#define SH_VALIDATE(Cond, Msg) \
+    SH_VALIDATE_RET(Cond, Msg, )

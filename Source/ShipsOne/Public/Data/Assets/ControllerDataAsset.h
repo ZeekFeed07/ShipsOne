@@ -20,6 +20,9 @@ public:
 	TObjectPtr<UInputMappingContext> ShipPlacementContext;
 
 	UPROPERTY(EditAnywhere)
+	TObjectPtr<UInputMappingContext> ShipRemovementContext;
+
+	UPROPERTY(EditAnywhere)
 	TObjectPtr<UInputAction> CameraRotationInput;
 
 	UPROPERTY(EditAnywhere)
@@ -36,4 +39,7 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UInputAction> ShipRotationInput;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UInputAction> ShipPullInput;
 };

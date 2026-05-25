@@ -21,6 +21,11 @@ void AShGameplayPlayerController::RequestShipCreation_Implementation(EShipSize S
 	ServerRequestShipCreation(ShipSize);
 }
 
+void AShGameplayPlayerController::SendFieldInfo_Implementation()
+{
+	ServerSendFieldInfo();
+}
+
 void AShGameplayPlayerController::ApproveFieldCreation_Implementation()
 {
 	ClientCreateFieldApproved();
@@ -40,55 +45,13 @@ void AShGameplayPlayerController::SetupInputComponent()
 
 	UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(InputComponent);
 
-	if (!IsValid(EIC))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_EICNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!IsValid(ControllerConfig))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_ControllerConfigNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!IsValid(ControllerConfig->CameraRotationInput))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_CameraRotationInputNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!IsValid(ControllerConfig->CameraMovementInput))
-	if (!IsValid(ControllerConfig->CameraZoomInput))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_CameraZoomInputNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!IsValid(ControllerConfig->ShipPlacementInput))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_ShipPlacementInputNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!IsValid(ControllerConfig->ShipRotationInput))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_ShipRotationInputNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(EIC), LogMessage_EICNotValid);
+	SH_VALIDATE(IsValid(ControllerConfig), LogMessage_ControllerConfigNotValid);
+	SH_VALIDATE(IsValid(ControllerConfig->CameraRotationInput), LogMessage_CameraRotationInputNotValid);
+	SH_VALIDATE(IsValid(ControllerConfig->CameraMovementInput), LogMessage_CameraMovementInputNotValid);
+	SH_VALIDATE(IsValid(ControllerConfig->CameraZoomInput), LogMessage_CameraZoomInputNotValid);
+	SH_VALIDATE(IsValid(ControllerConfig->ShipPlacementInput), LogMessage_ShipPlacementInputNotValid);
+	SH_VALIDATE(IsValid(ControllerConfig->ShipRotationInput), LogMessage_ShipRotationInputNotValid);
 
 	EIC->BindAction(
 		ControllerConfig->CameraRotationInput,
@@ -105,7 +68,6 @@ void AShGameplayPlayerController::SetupInputComponent()
 		ETriggerEvent::Triggered,
 		this,
 		&AShGameplayPlayerController::ZoomCameraInput);
-
 	EIC->BindAction(
 		ControllerConfig->ShipPlacementInput,
 		ETriggerEvent::Triggered,
@@ -116,38 +78,22 @@ void AShGameplayPlayerController::SetupInputComponent()
 		ETriggerEvent::Triggered,
 		this,
 		&AShGameplayPlayerController::RotateShipInput);
+	EIC->BindAction(
+		ControllerConfig->ShipPullInput,
+		ETriggerEvent::Triggered,
+		this,
+		&AShGameplayPlayerController::PullShipInput);
 }
 
 void AShGameplayPlayerController::InitManager()
 {
-	if (!GetWorld())
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_WorldNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(GetWorld(), LogMessage_WorldNotValid);
 
 	Manager = GetWorld()->GetSubsystem<UShGameManager>();
-	if(!IsValid(Manager))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_SubsystemNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(Manager), LogMessage_SubsystemNotValid);
 
 	APlayerState* State = GetPlayerState<APlayerState>();
-	if (!IsValid(State))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_PlayerStateNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(State), LogMessage_PlayerStateNotValid);
 
 	Manager->SetupControllerRef(this);
 	Manager->SetupPlayerStateRef(State);
@@ -162,22 +108,8 @@ void AShGameplayPlayerController::LoadControllerConfig()
 
 void AShGameplayPlayerController::RotateCameraAngleInput(const FInputActionValue& Value)
 {
-	if (!IsValid(GetPawn()))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_PawnNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!GetPawn()->Implements<UGameplayPawnInterface>())
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_PawnNotImplementsInterface,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(GetPawn()), LogMessage_PawnNotValid);
+	SH_VALIDATE(GetPawn()->Implements<UGameplayPawnInterface>(), LogMessage_PawnNotImplementsInterface);
 
 	FVector2D Angle = Value.Get<FVector2D>();
 	IGameplayPawnInterface::Execute_RotateCameraAngle2D(GetPawn(), Angle);
@@ -185,22 +117,8 @@ void AShGameplayPlayerController::RotateCameraAngleInput(const FInputActionValue
 
 void AShGameplayPlayerController::MoveCameraInput(const FInputActionValue& Value)
 {
-	if (!IsValid(GetPawn()))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_PawnNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!GetPawn()->Implements<UGameplayPawnInterface>())
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_PawnNotImplementsInterface,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(GetPawn()), LogMessage_PawnNotValid);
+	SH_VALIDATE(GetPawn()->Implements<UGameplayPawnInterface>(), LogMessage_PawnNotImplementsInterface);
 
 	FVector2D Delta = Value.Get<FVector2D>();
 	IGameplayPawnInterface::Execute_MoveCamera2D(GetPawn(), Delta);
@@ -208,22 +126,8 @@ void AShGameplayPlayerController::MoveCameraInput(const FInputActionValue& Value
 
 void AShGameplayPlayerController::ZoomCameraInput(const FInputActionValue& Value)
 {
-	if (!IsValid(GetPawn()))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_PawnNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!GetPawn()->Implements<UGameplayPawnInterface>())
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_PawnNotImplementsInterface,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(GetPawn()), LogMessage_PawnNotValid);
+	SH_VALIDATE(GetPawn()->Implements<UGameplayPawnInterface>(), LogMessage_PawnNotImplementsInterface);
 
 	float ZoomValue = Value.Get<float>();
 	IGameplayPawnInterface::Execute_ZoomCamera(GetPawn(), ZoomValue);
@@ -231,23 +135,21 @@ void AShGameplayPlayerController::ZoomCameraInput(const FInputActionValue& Value
 
 void AShGameplayPlayerController::PlaceShipInput(const FInputActionValue& Value)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Emerald, FString("Triggered"));
+	Manager->PlaceShip();
 }
 
 void AShGameplayPlayerController::RotateShipInput(const FInputActionValue& Value)
 {
-	if (!IsValid(Manager))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_SubsystemNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(Manager), LogMessage_SubsystemNotValid);
 
 	float RotationValue = Value.Get<float>();
 
 	RotationValue < 0 ? Manager->RotateShipClockwise() : Manager->RotateShipCounterClockwise();
+}
+
+void AShGameplayPlayerController::PullShipInput(const FInputActionValue& Value)
+{
+	Manager->PullHoveredShip();
 }
 
 void AShGameplayPlayerController::SetupInputMode()
@@ -267,45 +169,37 @@ void AShGameplayPlayerController::ServerRequestShipCreation_Implementation(const
 	ClientCreateShipApproved(ShipSize);
 }
 
+void AShGameplayPlayerController::ServerSendFieldInfo_Implementation()
+{
+	// todo: потом надо сделать валидацию
+
+	ClientPlayerCanStart();
+}
+
 void AShGameplayPlayerController::ClientCreateFieldApproved_Implementation()
 {
-	OnCreateFieldAllowed.Broadcast();
+	Manager->StartPlayerFieldCreation();
 }
 
 void AShGameplayPlayerController::ClientCreateShipApproved_Implementation(const EShipSize ShipSize)
 {
-	OnCreateShipAllowed.Broadcast(ShipSize);
+	Manager->MakeShip(ShipSize);
+}
+
+void AShGameplayPlayerController::ClientPlayerCanStart_Implementation()
+{
+	Manager->OnGameReady.Broadcast();
 }
 
 void AShGameplayPlayerController::ApplyCameraActionsInputContext_Implementation()
 {
 	if (!IsLocalController()) return;
-	if (!IsValid(ControllerConfig))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_ControllerConfigNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!IsValid(ControllerConfig->CameraActionsContext))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_InputMappingNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+
+	SH_VALIDATE(IsValid(ControllerConfig), LogMessage_ControllerConfigNotValid);
+	SH_VALIDATE(IsValid(ControllerConfig->CameraActionsContext), LogMessage_InputMappingNotValid);
 
 	UEnhancedInputLocalPlayerSubsystem* EnhancedSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
-	if (!IsValid(EnhancedSubsystem))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_EnhancedSubsystemNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(EnhancedSubsystem), LogMessage_EnhancedSubsystemNotValid);
 
 	EnhancedSubsystem->AddMappingContext(ControllerConfig->CameraActionsContext, 0);
 }
@@ -313,104 +207,61 @@ void AShGameplayPlayerController::ApplyCameraActionsInputContext_Implementation(
 void AShGameplayPlayerController::ApplyShipPlacementInputContext_Implementation()
 {
 	if (!IsLocalController()) return;
-	if (!IsValid(ControllerConfig))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_ControllerConfigNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!IsValid(ControllerConfig->ShipPlacementContext))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_InputMappingNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+
+	SH_VALIDATE(IsValid(ControllerConfig), LogMessage_ControllerConfigNotValid);
+	SH_VALIDATE(IsValid(ControllerConfig->ShipPlacementContext), LogMessage_InputMappingNotValid);
 
 	UEnhancedInputLocalPlayerSubsystem* EnhancedSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
-	if (!IsValid(EnhancedSubsystem))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_EnhancedSubsystemNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(EnhancedSubsystem), LogMessage_EnhancedSubsystemNotValid);
 
 	EnhancedSubsystem->AddMappingContext(ControllerConfig->ShipPlacementContext, 1);
+}
+
+void AShGameplayPlayerController::ApplyShipRemovementInputContext_Implementation()
+{
+	if (!IsLocalController()) return;
+
+	SH_VALIDATE(IsValid(ControllerConfig), LogMessage_ControllerConfigNotValid);
+	SH_VALIDATE(IsValid(ControllerConfig->ShipRemovementContext), LogMessage_InputMappingNotValid);
+
+	UEnhancedInputLocalPlayerSubsystem* EnhancedSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+	SH_VALIDATE(IsValid(EnhancedSubsystem), LogMessage_EnhancedSubsystemNotValid);
+
+	EnhancedSubsystem->AddMappingContext(ControllerConfig->ShipRemovementContext, 1);
 }
 
 void AShGameplayPlayerController::RemoveShipPlacementInputContext_Implementation()
 {
 	if (!IsLocalController()) return;
-	if (!IsValid(ControllerConfig))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_ControllerConfigNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!IsValid(ControllerConfig->ShipPlacementContext))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_InputMappingNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+
+	SH_VALIDATE(IsValid(ControllerConfig), LogMessage_ControllerConfigNotValid);
+	SH_VALIDATE(IsValid(ControllerConfig->ShipPlacementContext), LogMessage_InputMappingNotValid);
 
 	UEnhancedInputLocalPlayerSubsystem* EnhancedSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
-	if (!IsValid(EnhancedSubsystem))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_EnhancedSubsystemNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(EnhancedSubsystem), LogMessage_EnhancedSubsystemNotValid);
 
 	EnhancedSubsystem->RemoveMappingContext(ControllerConfig->ShipPlacementContext);
 }
 
-void AShGameplayPlayerController::BindToFieldCreation_Implementation(const FOnAllowCreationNotMulticast& Event)
+void AShGameplayPlayerController::RemoveShipRemovementInputContext_Implementation()
 {
-	OnCreateFieldAllowed.Add(Event);
-}
+	if (!IsLocalController()) return;
 
-void AShGameplayPlayerController::UnbindFromFieldCreation_Implementation(const FOnAllowCreationNotMulticast& Event)
-{
-	OnCreateFieldAllowed.Remove(Event);
-}
+	SH_VALIDATE(IsValid(ControllerConfig), LogMessage_ControllerConfigNotValid);
+	SH_VALIDATE(IsValid(ControllerConfig->ShipRemovementContext), LogMessage_InputMappingNotValid);
 
-void AShGameplayPlayerController::BindToShipCreation_Implementation(const FOnAllowShipCreationNotMulticast& Event)
-{
-	OnCreateShipAllowed.Add(Event);
+	UEnhancedInputLocalPlayerSubsystem* EnhancedSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+	SH_VALIDATE(IsValid(EnhancedSubsystem), LogMessage_EnhancedSubsystemNotValid);
+
+	EnhancedSubsystem->RemoveMappingContext(ControllerConfig->ShipRemovementContext);
 }
 
 void AShGameplayPlayerController::ServerControllerReadyRPC_Implementation()
 {
-	if (!GetWorld())
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_WorldNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(GetWorld(), LogMessage_WorldNotValid);
 
 	AShGameplayGameMode* GM = GetWorld()->GetAuthGameMode<AShGameplayGameMode>();
-	if (!IsValid(GM))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_GamemodeNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(GM), LogMessage_GamemodeNotValid);
 
 	GM->PlayerReady(this);
 }

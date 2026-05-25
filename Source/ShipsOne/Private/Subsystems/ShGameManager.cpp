@@ -53,73 +53,27 @@ void UShGameManager::PostInitialize()
 
 void UShGameManager::SetupControllerRef(APlayerController* PC)
 {
-	if (!IsValid(PC))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ControllerNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!IsValid(PC->GetPawn()))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_PawnNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!PC->Implements<UGameplayControllerInterface>())
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ControllerNotImplementsInterface,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(PC), LogMessage_ControllerNotValid);
+	SH_VALIDATE(IsValid(PC->GetPawn()), LogMessage_PawnNotValid);
+	SH_VALIDATE(PC->Implements<UGameplayControllerInterface>(), LogMessage_ControllerNotImplementsInterface);
 
 	ControllerRef = PC;
 	PawnRef = ControllerRef->GetPawn();
-
-	OnAllowFieldCreation.BindDynamic(this, &UShGameManager::StartPlayerFieldCreation);
-	OnAllowShipCreation.BindDynamic(this, &UShGameManager::OnShipCreationApproved);
-
-	IGameplayControllerInterface::Execute_BindToFieldCreation(ControllerRef, OnAllowFieldCreation);
-	IGameplayControllerInterface::Execute_BindToShipCreation(ControllerRef, OnAllowShipCreation);
 }
 
 void UShGameManager::SetupPlayerStateRef(APlayerState* PS)
 {
-	if (!IsValid(PS) || !PS->Implements<UStateUtilityInterface>())
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_PlayerStateNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(!IsValid(PS) && !PS->Implements<UStateUtilityInterface>(), LogMessage_PlayerStateNotValid);
 
 	StateRef = PS;
 }
 
-void UShGameManager::MakeShip(const EShipSize ShipSize)
+void UShGameManager::RequestShipCreation(const EShipSize ShipSize)
 {
-	if (!IsValid(ControllerRef))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ControllerNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!ControllerRef->Implements<UGameplayControllerInterface>() || !ControllerRef->Implements<UGameplayNetworkInterface>())
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ControllerNotImplementsInterface,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(ControllerRef), LogMessage_ControllerNotValid);
+	SH_VALIDATE(ControllerRef->Implements<UGameplayControllerInterface>() &&
+				ControllerRef->Implements<UGameplayNetworkInterface>(), 
+				LogMessage_ControllerNotImplementsInterface);
 
 	IGameplayNetworkInterface::Execute_RequestShipCreation(ControllerRef, ShipSize);
 }
@@ -130,6 +84,16 @@ void UShGameManager::RemoveCurrentShip()
 
 	IncreaseShipNum(CurrentShip->GetShipSize());
 	RemoveShip(CurrentShip);
+
+	UpdateShipsCollision(true);
+
+	RemoveTickTask(&UShGameManager::SnapShipToCursor);
+	RemoveTickTask(&UShGameManager::CheckCellUnderCursor);
+
+	IGameplayControllerInterface::Execute_RemoveShipPlacementInputContext(ControllerRef);
+	IGameplayControllerInterface::Execute_ApplyShipRemovementInputContext(ControllerRef);
+
+	OnShipReleased.Broadcast();
 }
 
 void UShGameManager::RotateShipClockwise()
@@ -148,40 +112,10 @@ void UShGameManager::RotateShipCounterClockwise()
 
 void UShGameManager::StartPlayerFieldCreation()
 {
-	if (!GetWorld())
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_WorldNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!IsValid(ControllerRef))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ControllerNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!ControllerRef->Implements<UGameplayControllerInterface>())
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ControllerNotImplementsInterface,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!IsValid(PawnRef))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_PawnNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-
-	IGameplayControllerInterface::Execute_UnbindFromFieldCreation(ControllerRef, OnAllowFieldCreation);
+	SH_VALIDATE(GetWorld(), LogMessage_WorldNotValid);
+	SH_VALIDATE(IsValid(ControllerRef), LogMessage_ControllerNotValid);
+	SH_VALIDATE(ControllerRef->Implements<UGameplayControllerInterface>(), LogMessage_ControllerNotImplementsInterface);
+	SH_VALIDATE(IsValid(PawnRef), LogMessage_PawnNotValid);
 
 	SelfField = GetWorld()->SpawnActor<AShFieldBase>();
 	SelfField->SetCellConfig(CellConfig);
@@ -194,82 +128,109 @@ void UShGameManager::StartPlayerFieldCreation()
 	CreateShipPlacingWidget();
 
 	IGameplayControllerInterface::Execute_ApplyCameraActionsInputContext(ControllerRef);
-	IGameplayControllerInterface::Execute_ApplyShipPlacementInputContext(ControllerRef);
+	IGameplayControllerInterface::Execute_ApplyShipRemovementInputContext(ControllerRef);
+
+	AddTickTask(&UShGameManager::TraceUnderCursor);
+	AddTickTask(&UShGameManager::CheckShipUnderCursor);
 }
 
-void UShGameManager::OnShipCreationApproved(const EShipSize ShipSize)
+void UShGameManager::MakeShip(const EShipSize ShipSize)
 {
-	if (!IsValid(GetWorld()))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_WorldNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!CheckCanCreateShip(ShipSize))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_CannotCreateShip,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(GetWorld()), LogMessage_WorldNotValid);
+	SH_VALIDATE(CheckCanCreateShip(ShipSize), LogMessage_CannotCreateShip);
 
 	CurrentShip = SpawnShip(ShipSize);
-	if (!IsValid(CurrentShip))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ShipNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		CurrentShip = nullptr;
-		return;
-	}
+
+	SH_VALIDATE(IsValid(CurrentShip), LogMessage_ShipNotValid);
+
+	UpdateShipsCollision(false);
+
+	CurrentShip->UpdateOutline(true);
 
 	DecreaseShipNum(ShipSize);
 	CreatedShips.Add(CurrentShip);
 
+	IGameplayControllerInterface::Execute_RemoveShipRemovementInputContext(ControllerRef);
 	IGameplayControllerInterface::Execute_ApplyShipPlacementInputContext(ControllerRef);
 
-	TickTasks.Add(&UShGameManager::TraceUnderCursor);
-	TickTasks.Add(&UShGameManager::SnapShipToCursor);
-	TickTasks.Add(&UShGameManager::CheckCellUnderCursor);
+	AddTickTask(&UShGameManager::SnapShipToCursor);
+	AddTickTask(&UShGameManager::CheckCellUnderCursor);
+
+	OnShipCaptured.Broadcast();
+}
+
+void UShGameManager::PlaceShip()
+{
+	if (!IsValid(CurrentShip) || !IsValid(SelfField) || !IsValid(CurrentHit.GetActor())) return;
+
+	SH_VALIDATE(IsValid(ControllerRef), LogMessage_ControllerNotValid);
+	SH_VALIDATE(ControllerRef->Implements<UGameplayNetworkInterface>(), LogMessage_ControllerNotImplementsInterface);
+	SH_VALIDATE(ControllerRef->Implements<UGameplayControllerInterface>(), LogMessage_ControllerNotImplementsInterface);
+
+	auto CurrentCell = Cast<AShCellBase>(CurrentHit.GetActor());
+	if (!IsValid(CurrentCell)) return;
+
+	auto Loc = CurrentCell->GetActorLocation();
+
+	if (!SelfField->PlaceShipOnCell(CurrentCell, CurrentShip)) return;
+
+	CurrentShip->SetActorLocation({ Loc.X, Loc.Y, Loc.Z + 100. });
+	CurrentShip->UpdateOutline(false);
+	RemoveTickTask(&UShGameManager::SnapShipToCursor);
+	RemoveTickTask(&UShGameManager::CheckCellUnderCursor);
+
+	CurrentShip = nullptr;
+
+	IGameplayControllerInterface::Execute_RemoveShipPlacementInputContext(ControllerRef);
+	IGameplayControllerInterface::Execute_ApplyShipRemovementInputContext(ControllerRef);
+		
+	if (!Debug_CheckShipsNum())
+	{
+		IGameplayNetworkInterface::Execute_SendFieldInfo(ControllerRef);
+	}
+
+	UpdateShipsCollision(true);
+
+	OnShipReleased.Broadcast();
+}
+
+void UShGameManager::PullHoveredShip()
+{
+	if (!IsValid(HoveredShip))
+	{
+		return;
+	}
+
+	CurrentShip = HoveredShip;
+	CurrentShip->UpdateOutline(true);
+
+	UpdateShipsCollision(false);
+
+	SelfField->RemoveShip(CurrentShip);
+
+	IGameplayControllerInterface::Execute_RemoveShipRemovementInputContext(ControllerRef);
+	IGameplayControllerInterface::Execute_ApplyShipPlacementInputContext(ControllerRef);
+
+	AddTickTask(&UShGameManager::SnapShipToCursor);
+	AddTickTask(&UShGameManager::CheckCellUnderCursor);
+
+	OnShipCaptured.Broadcast();
 }
 
 bool UShGameManager::CheckCanCreateShip(EShipSize ShipSize)
 {
-	if (!ShipsNum.Contains(ShipSize))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ShipSizeNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return false;
-	}
+	SH_VALIDATE_RET(ShipsNum.Contains(ShipSize), LogMessage_ShipSizeNotValid, false);
+
 	return ShipsNum[ShipSize] > 0;
 }
 
 AShShipBase* UShGameManager::SpawnShip(const EShipSize ShipSize)
 {
-	if (!GetWorld())
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_WorldNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return nullptr;
-	}
+	SH_VALIDATE_RET(GetWorld(), LogMessage_WorldNotValid, nullptr);
 
 	AShShipBase* ShipRef = GetWorld()->SpawnActor<AShShipBase>();
-	if (!IsValid(ShipRef))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ShipNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return nullptr;
-	}
+
+	SH_VALIDATE_RET(IsValid(ShipRef), LogMessage_ShipNotValid, nullptr);
 
 	ShipRef->SetShipConfig(ShipConfig);
 	ShipRef->SetCellConfig(CellConfig);
@@ -283,6 +244,8 @@ AShShipBase* UShGameManager::SpawnShip(const EShipSize ShipSize)
 void UShGameManager::RemoveShip(AShShipBase*& ShipToRemove)
 {
 	if (!IsValid(ShipToRemove)) return;
+
+	CreatedShips.RemoveSwap(ShipToRemove);
 
 	ShipToRemove->Destroy();
 	ShipToRemove = nullptr;
@@ -308,45 +271,26 @@ void UShGameManager::DecreaseShipNum(EShipSize ShipSize)
 	}
 }
 
+void UShGameManager::UpdateShipsCollision(bool bEnable)
+{
+	for (auto Ship : CreatedShips)
+	{
+		Ship->SetCollision(bEnable);
+	}
+}
+
 void UShGameManager::TraceUnderCursor(float DeltaSeconds)
 {
-	if (!IsValid(ControllerRef))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ControllerNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(ControllerRef), LogMessage_ControllerNotValid);
+
 	ControllerRef->GetHitResultUnderCursor(ECC_GameTraceChannel1, false, CurrentHit);
 }
 
 void UShGameManager::SnapShipToCursor(float DeltaSeconds)
 {
-	if (!IsValid(ControllerRef))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ControllerNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!IsValid(ShipConfig))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ShipConfigNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!IsValid(CurrentShip))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ShipNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(ControllerRef), LogMessage_ControllerNotValid);
+	SH_VALIDATE(IsValid(ShipConfig), LogMessage_ShipConfigNotValid);
+	SH_VALIDATE(IsValid(CurrentShip), LogMessage_ShipNotValid);
 
 	FVector SnapTarget = FVector::ZeroVector;
 	if (IsValid(CurrentHit.GetActor()) && CurrentHit.GetActor()->GetClass() == AShCellBase::StaticClass() && CurrentHit.bBlockingHit)
@@ -374,49 +318,85 @@ void UShGameManager::SnapShipToCursor(float DeltaSeconds)
 void UShGameManager::CheckCellUnderCursor(float DeltaSeconds)
 {
 	AShCellBase* CurrentCell = nullptr;
-	if (IsValid(CurrentHit.GetActor()))
+	if (IsValid(CurrentHit.GetActor()) && CurrentHit.GetActor()->GetClass() == AShCellBase::StaticClass())
 	{
 		CurrentCell = Cast<AShCellBase>(CurrentHit.GetActor());
-		if (!IsValid(CurrentCell)) return;
 	}
 
 	if (CurrentCell != LastCell)
 	{
+		if (!IsValid(SelfField)) return;
 		SelfField->ShipHoverOn(CurrentCell, CurrentShip);
 	}
 
 	LastCell = CurrentCell;
 }
 
+void UShGameManager::CheckShipUnderCursor(float DeltaSeconds)
+{
+	if (!IsValid(CurrentHit.GetActor()) ||
+		CurrentHit.GetActor()->GetClass() != AShShipBase::StaticClass())
+	{
+		if (IsValid(HoveredShip))
+		{
+			HoveredShip->UpdateOutline(false);
+		}
+		HoveredShip = nullptr;
+		return;
+	}
+	
+	if(CurrentHit.GetActor() != HoveredShip)
+	{
+		if (IsValid(HoveredShip))
+		{
+			HoveredShip->UpdateOutline(false);
+		}
+		auto CastedHitShip = Cast<AShShipBase>(CurrentHit.GetActor());
+		if (IsValid(CastedHitShip))
+		{
+			CastedHitShip->UpdateOutline(true);
+			HoveredShip = CastedHitShip;
+		}
+	}
+}
+
+void UShGameManager::AddTickTask(FTickTask TaskToAdd)
+{
+	if (!TickTasks.Contains(TaskToAdd))
+	{
+		TickTasks.Add(TaskToAdd);
+	}
+}
+
+void UShGameManager::RemoveTickTask(FTickTask TaskToRemove)
+{
+	if (TickTasks.Contains(TaskToRemove))
+	{
+		TickTasks.RemoveSwap(TaskToRemove);
+	}
+}
+
 void UShGameManager::CreateShipPlacingWidget()
 {
-	if (!IsValid(WidgetConfig))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_WidgetConfigNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!IsValid(WidgetConfig->ShipPlacingWidgetClass))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ShipPlacementWidgetNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(WidgetConfig), LogMessage_WidgetConfigNotValid);
+	SH_VALIDATE(IsValid(WidgetConfig->ShipPlacingWidgetClass), LogMessage_ShipPlacementWidgetNotValid);
 
 	ShipPlacingWidgetRef = CreateWidget<UUserWidget>(ControllerRef, WidgetConfig->ShipPlacingWidgetClass);
-	
-	if(!IsValid(ShipPlacingWidgetRef))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s. Func: %s. Obj: %s."),
-			*LogMessage_ShipPlacementWidgetNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+
+	SH_VALIDATE(IsValid(ShipPlacingWidgetRef), LogMessage_ShipPlacementWidgetNotValid);
 
 	ShipPlacingWidgetRef->AddToViewport();
+}
+
+bool UShGameManager::Debug_CheckShipsNum()
+{
+	TArray<int32> Values;
+	ShipsNum.GenerateValueArray(Values);
+
+	for (auto v : Values)
+	{
+		if (v != 0) return true;
+	}
+
+	return false;
 }

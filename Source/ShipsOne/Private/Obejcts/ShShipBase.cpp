@@ -23,7 +23,7 @@ void AShShipBase::SetupMesh()
 	Body->SetupAttachment(SceneComponent);
 
 	Body->AddLocalRotation({0.f, 90.f, 0.f});
-	Body->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
+	SetCollision(false);
 }
 
 void AShShipBase::Tick(float DeltaTime)
@@ -33,25 +33,12 @@ void AShShipBase::Tick(float DeltaTime)
 
 void AShShipBase::SetShipSize(const EShipSize ShipSize)
 {
-	if (!IsValid(ShipConfig))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_ShipConfigNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (!IsValid(ShipConfig->Size1Body) ||
-		!IsValid(ShipConfig->Size2Body) ||
-		!IsValid(ShipConfig->Size3Body) ||
-		!IsValid(ShipConfig->Size4Body))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_ShipBodyMeshNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(ShipConfig), LogMessage_ShipConfigNotValid);
+	SH_VALIDATE(IsValid(ShipConfig->Size1Body) &&
+				IsValid(ShipConfig->Size2Body) &&
+				IsValid(ShipConfig->Size3Body) &&
+				IsValid(ShipConfig->Size4Body), 
+				LogMessage_ShipBodyMeshNotValid);
 
 	switch (ShipSize)
 	{
@@ -99,16 +86,21 @@ void AShShipBase::SetCellConfig(UCellDataAsset* ConfigPtr)
 	}
 }
 
+void AShShipBase::SetPlacedCellID(const int32 X, const int32 Y)
+{
+	PlacedX = X;
+	PlacedY = Y;
+}
+
+void AShShipBase::SetCollision(bool bCollision)
+{
+	ECollisionEnabled::Type Type = bCollision ? ECollisionEnabled::Type::QueryOnly : ECollisionEnabled::Type::NoCollision;
+	Body->SetCollisionEnabled(Type);
+}
+
 void AShShipBase::NormalizeForDirection()
 {
-	if (!IsValid(CellConfig))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s."),
-			*LogMessage_CellConfigNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(CellConfig), LogMessage_CellConfigNotValid);
 
 	FVector CurrentLocation = FVector::ZeroVector;
 
@@ -152,4 +144,19 @@ EShipSize AShShipBase::GetShipSize()
 EShipDirection AShShipBase::GetShipDirection()
 {
 	return Direction;
+}
+
+void AShShipBase::GetPlacedCellID(int32& X, int32& Y)
+{
+	X = PlacedX;
+	Y = PlacedY;
+}
+
+void AShShipBase::UpdateOutline(bool bEnable)
+{
+	SH_VALIDATE(ShipConfig, LogMessage_ShipConfigNotValid);
+	SH_VALIDATE(ShipConfig->OutlineMaterial, LogMessage_ShipOutlineMaterialNotValid);
+
+	UMaterialInterface* Mat = bEnable ? ShipConfig->OutlineMaterial : nullptr;
+	Body->SetOverlayMaterial(Mat);
 }

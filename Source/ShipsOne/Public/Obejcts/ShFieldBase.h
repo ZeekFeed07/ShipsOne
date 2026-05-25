@@ -36,6 +36,12 @@ public:
 
 	UFUNCTION()
 	virtual void ShipHoverOn(AShCellBase* CellPtr, AShShipBase* ShipPtr);
+	
+	UFUNCTION()
+	virtual bool PlaceShipOnCell(AShCellBase* CellPtr, AShShipBase* ShipPtr);
+
+	UFUNCTION()
+	virtual void RemoveShip(AShShipBase* ShipPtr);
 
 	UFUNCTION()
 	void SetFieldConfig(UFieldDataAsset* ConfigPtr);
@@ -68,13 +74,16 @@ private:
 	void ColorizeAreaNegativeTemporary(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize);
 
 	UFUNCTION()
-	void ColorizeAreaNegativeFinally(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize);
-
-	UFUNCTION()
 	void ResetAllCells();
 
 	UFUNCTION()
 	bool IsInBounds(int32 V, int32 Max) { return V >= 0 && V < Max; }
+
+	UFUNCTION()
+	bool IsShipNearCell(int32 X, int32 Y);
+
+	UFUNCTION()
+	virtual void ConvertID(const int32 ID, int32& X, int32& Y);
 
 	UFUNCTION()
 	AShCellBase* GetCell(int32 X, int32 Y);

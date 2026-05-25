@@ -19,16 +19,7 @@ void AShFieldBase::PlaceInCenter()
 
 void AShFieldBase::PlaceInLeft()
 {
-	if (!IsValid(FieldConfig))
-	{
-		UE_LOG(ShLog_Gameplay,
-			Error,
-			TEXT("%s Func: %s. Obj: %s"),
-			*LogMessage_FieldConfigNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(FieldConfig), LogMessage_FieldConfigNotValid);
 
 	float FieldX = FieldConfig->FieldSizeX * CellConfig->CellSize.X / 2.f;
 	float FieldY = FieldConfig->FieldSizeY * CellConfig->CellSize.Y / 2.f;
@@ -37,16 +28,7 @@ void AShFieldBase::PlaceInLeft()
 
 void AShFieldBase::PlaceInRight()
 {
-	if (!IsValid(FieldConfig))
-	{
-		UE_LOG(ShLog_Gameplay,
-			Error,
-			TEXT("%s Func: %s. Obj: %s"),
-			*LogMessage_FieldConfigNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(FieldConfig), LogMessage_FieldConfigNotValid);
 
 	float FieldX = FieldConfig->FieldSizeX * CellConfig->CellSize.X / 2.f;
 	float FieldY = FieldConfig->FieldSizeY * CellConfig->CellSize.Y / 2.f;
@@ -65,31 +47,11 @@ void AShFieldBase::ShipHoverOn(AShCellBase* CellPtr, AShShipBase* ShipPtr)
 		ResetAllCells();
 		return;
 	}
-	if (!IsValid(FieldConfig))
-	{
-		UE_LOG(ShLog_Gameplay,
-			Error,
-			TEXT("%s Func: %s. Obj: %s"),
-			*LogMessage_FieldConfigNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
-	if (FieldConfig->FieldSizeX == 0)
-	{
-		UE_LOG(ShLog_Gameplay,
-			Error,
-			TEXT("%s Func: %s. Obj: %s"),
-			*LogMessage_ZeroDividing,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return;
-	}
 
 	int32 RawID = Field.Find(CellPtr);
 
-	const int32 X = RawID / FieldConfig->FieldSizeY;
-	const int32 Y = RawID % FieldConfig->FieldSizeY;
+	int32 X = INDEX_NONE, Y = INDEX_NONE;
+	ConvertID(RawID, X, Y);
 
 	const EShipDirection Dir = ShipPtr->GetShipDirection();
 	const EShipSize Size = ShipPtr->GetShipSize();
@@ -97,6 +59,83 @@ void AShFieldBase::ShipHoverOn(AShCellBase* CellPtr, AShShipBase* ShipPtr)
 	CheckCanPlaceShip(X, Y, Dir, Size)
 		? ColorizeAreaPositiveTemporary(X, Y, Dir, Size)
 		: ColorizeAreaNegativeTemporary(X, Y, Dir, Size);
+}
+
+bool AShFieldBase::PlaceShipOnCell(AShCellBase* CellPtr, AShShipBase* ShipPtr)
+{
+	if (!IsValid(ShipPtr) || !IsValid(CellPtr) || !Field.Contains(CellPtr))
+	{
+		return false;
+	}
+
+	int32 RawID = Field.Find(CellPtr);
+
+	int32 X = INDEX_NONE, Y = INDEX_NONE;
+	ConvertID(RawID, X, Y);
+
+	const EShipDirection Dir = ShipPtr->GetShipDirection();
+	const EShipSize Size = ShipPtr->GetShipSize();
+
+	if (CheckCanPlaceShip(X, Y, Dir, Size))
+	{
+		ColorizeAreaPositiveFinally(X, Y, Dir, Size);
+		ShipPtr->SetPlacedCellID(X, Y);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void AShFieldBase::RemoveShip(AShShipBase* ShipPtr)
+{
+	if (!IsValid(ShipPtr))
+	{
+		return;
+	}
+
+	int32 X = INDEX_NONE, Y = INDEX_NONE;
+
+	ShipPtr->GetPlacedCellID(X, Y);
+	if (X == INDEX_NONE || Y == INDEX_NONE)
+	{
+		return;
+	}
+
+	SH_VALIDATE(IsValid(FieldConfig), LogMessage_FieldConfigNotValid);
+
+	const int32 Size = static_cast<int32>(ShipPtr->GetShipSize());
+
+	int32 DirX = INDEX_NONE, DirY = INDEX_NONE;
+	if (!GetCoeffByDir(ShipPtr->GetShipDirection(), DirX, DirY)) return;
+
+	for (int32 s = 0; s <= Size; ++s)
+	{
+		auto Cell = GetCell(X + DirX * s, Y + DirY * s);
+		Cell->UpdateState(ECellState::EMPTY);
+	}
+
+	for (int32 s = 0; s <= Size; ++s)
+	{
+		for (int32 i = -1; i <= 1; ++i)
+		{
+			for (int32 j = -1; j <= 1; ++j)
+			{
+				int32 NextX = X + i + s * DirX;
+				int32 NextY = Y + j + s * DirY;
+
+				if (!IsInBounds(NextX, FieldConfig->FieldSizeX) || !IsInBounds(NextY, FieldConfig->FieldSizeY)) continue;
+				AShCellBase* Cell = GetCell(NextX, NextY);
+				if (!IsShipNearCell(NextX, NextY))
+				{
+					Cell->UpdateState(ECellState::EMPTY);
+				}
+			}
+		}
+	}
+
+	ColorizeAreaPositiveTemporary(X, Y, ShipPtr->GetShipDirection(), ShipPtr->GetShipSize());
 }
 
 void AShFieldBase::Tick(float DeltaTime)
@@ -118,86 +157,15 @@ void AShFieldBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 bool AShFieldBase::CreateCells()
 {
 	UWorld* World = GetWorld();
-	if (!IsValid(World))
-	{
-		UE_LOG(ShLog_Gameplay,
-			Error,
-			TEXT("%s Func: %s. Obj: %s"),
-			*LogMessage_WorldNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return false;
-	}
-	if (!IsValid(FieldConfig))
-	{
-		UE_LOG(ShLog_Gameplay,
-			Error,
-			TEXT("%s Func: %s. Obj: %s"),
-			*LogMessage_FieldConfigNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return false;
-	}
-	if (!IsValid(CellConfig))
-	{
-		UE_LOG(ShLog_Gameplay,
-			Error,
-			TEXT("%s Func: %s. Obj: %s"),
-			*LogMessage_CellConfigNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return false;
-	}
-	if (!IsValid(CellConfig->MeshRef))
-	{
-		UE_LOG(ShLog_Gameplay,
-			Error,
-			TEXT("%s Func: %s. Obj: %s"),
-			*LogMessage_CellMeshNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return false;
-	}
-	if (!IsValid(CellConfig->DeadZoneMaterialRef))
-	{
-		UE_LOG(ShLog_Gameplay,
-			Error,
-			TEXT("%s Func: %s. Obj: %s"),
-			*LogMessage_CellMaterialNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return false;
-	}
-	if (!IsValid(CellConfig->EmptyMaterialRef))
-	{
-		UE_LOG(ShLog_Gameplay,
-			Error,
-			TEXT("%s Func: %s. Obj: %s"),
-			*LogMessage_CellMaterialNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return false;
-	}
-	if (!IsValid(CellConfig->ShippedMaterialRef))
-	{
-		UE_LOG(ShLog_Gameplay,
-			Error,
-			TEXT("%s Func: %s. Obj: %s"),
-			*LogMessage_CellMaterialNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return false;
-	}
-	if (!IsValid(CellConfig->ForbiddenMaterialRef))
-	{
-		UE_LOG(ShLog_Gameplay,
-			Error,
-			TEXT("%s Func: %s. Obj: %s"),
-			*LogMessage_CellMaterialNotValid,
-			TEXT(__FUNCTION__),
-			*GetName());
-		return false;
-	}
+
+	SH_VALIDATE_RET(IsValid(World), LogMessage_WorldNotValid, false);
+	SH_VALIDATE_RET(IsValid(FieldConfig), LogMessage_FieldConfigNotValid, false);
+	SH_VALIDATE_RET(IsValid(CellConfig), LogMessage_CellConfigNotValid, false);
+	SH_VALIDATE_RET(IsValid(CellConfig->MeshRef), LogMessage_CellMeshNotValid, false);
+	SH_VALIDATE_RET(IsValid(CellConfig->DeadZoneMaterialRef), LogMessage_CellMaterialNotValid, false);
+	SH_VALIDATE_RET(IsValid(CellConfig->EmptyMaterialRef), LogMessage_CellMaterialNotValid, false);
+	SH_VALIDATE_RET(IsValid(CellConfig->ShippedMaterialRef), LogMessage_CellMaterialNotValid, false);
+	SH_VALIDATE_RET(IsValid(CellConfig->ForbiddenMaterialRef), LogMessage_CellMaterialNotValid, false);
 
 	ClearCells();
 
@@ -269,12 +237,7 @@ void AShFieldBase::ClearCells()
 
 bool AShFieldBase::CheckCanPlaceShip(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize)
 {
-	if (!IsValid(FieldConfig))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s"),
-			*LogMessage_FieldConfigNotValid, TEXT(__FUNCTION__), *GetName());
-		return false;
-	}
+	SH_VALIDATE_RET(IsValid(FieldConfig), LogMessage_FieldConfigNotValid, false);
 
 	int32 DirX = INDEX_NONE, DirY = INDEX_NONE;
 	if (!GetCoeffByDir(Direction, DirX, DirY)) return false;
@@ -286,7 +249,7 @@ bool AShFieldBase::CheckCanPlaceShip(int32 X, int32 Y, EShipDirection Direction,
 	if (!IsInBounds(EndX, FieldConfig->FieldSizeX) || !IsInBounds(EndY, FieldConfig->FieldSizeY))
 		return false;
 
-	for (int32 s = 0; s < Size; ++s)
+	for (int32 s = 0; s <= Size; ++s)
 	{
 		if (GetCell(X + s * DirX, Y + s * DirY)->GetState() != ECellState::EMPTY)
 			return false;
@@ -297,12 +260,8 @@ bool AShFieldBase::CheckCanPlaceShip(int32 X, int32 Y, EShipDirection Direction,
 
 void AShFieldBase::ColorizeAreaPositiveTemporary(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize)
 {
-	if (!IsValid(FieldConfig))
-	{
-		UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %s. Obj: %s"),
-			*LogMessage_FieldConfigNotValid, TEXT(__FUNCTION__), *GetName());
-		return;
-	}
+	SH_VALIDATE(IsValid(FieldConfig), LogMessage_FieldConfigNotValid);
+
 	if (!CheckCanPlaceShip(X, Y, Direction, ShipSize)) return;
 
 	ResetAllCells();
@@ -331,10 +290,44 @@ void AShFieldBase::ColorizeAreaPositiveTemporary(int32 X, int32 Y, EShipDirectio
 
 void AShFieldBase::ColorizeAreaPositiveFinally(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize)
 {
+	if (!CheckCanPlaceShip(X, Y, Direction, ShipSize)) return;
+
+	ResetAllCells();
+
+	int32 DirX = INDEX_NONE, DirY = INDEX_NONE;
+	if (!GetCoeffByDir(Direction, DirX, DirY)) return;
+
+	const int32 Size = static_cast<int32>(ShipSize);
+	for (int32 s = 0; s <= Size; ++s)
+	{
+		int32 NextX = X + s * DirX;
+		int32 NextY = Y + s * DirY;
+
+		AShCellBase* Cell = GetCell(NextX, NextY);
+		Cell->UpdateState(ECellState::SHIPPED);
+		
+		for (int32 i = -1; i <= 1; ++i)
+		{
+			for (int32 j = -1; j <= 1; ++j)
+			{
+				NextX = X + i + s * DirX;
+				NextY = Y + j + s * DirY;
+
+				if (!IsInBounds(NextX, FieldConfig->FieldSizeX) || !IsInBounds(NextY, FieldConfig->FieldSizeY)) continue;
+				Cell = GetCell(NextX, NextY);
+				if (Cell->GetState() == ECellState::EMPTY)
+				{
+					Cell->UpdateState(ECellState::DEADZONE);
+				}
+			}
+		}
+	}
 }
 
 void AShFieldBase::ColorizeAreaNegativeTemporary(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize)
 {
+	SH_VALIDATE(FieldConfig, LogMessage_FieldConfigNotValid);
+
 	ResetAllCells();
 
 	int32 DirX = INDEX_NONE, DirY = INDEX_NONE;
@@ -360,12 +353,10 @@ void AShFieldBase::ColorizeAreaNegativeTemporary(int32 X, int32 Y, EShipDirectio
 	}
 }
 
-void AShFieldBase::ColorizeAreaNegativeFinally(int32 X, int32 Y, EShipDirection Direction, EShipSize ShipSize)
-{
-}
-
 void AShFieldBase::ResetAllCells()
 {
+	SH_VALIDATE(FieldConfig, LogMessage_FieldConfigNotValid);
+
 	for (int32 i = 0; i < FieldConfig->FieldSizeX; ++i)
 	{
 		for (int32 j = 0; j < FieldConfig->FieldSizeY; ++j)
@@ -373,6 +364,34 @@ void AShFieldBase::ResetAllCells()
 			if (AShCellBase* Cell = GetCell(i, j)) Cell->ResetStateToActual();
 		}
 	}
+}
+
+bool AShFieldBase::IsShipNearCell(int32 X, int32 Y)
+{
+	SH_VALIDATE_RET(FieldConfig, LogMessage_FieldConfigNotValid, false);
+
+	for (int32 i = -1; i <= 1; ++i)
+	{
+		for (int32 j = -1; j <= 1; ++j)
+		{
+			int32 NextX = X + i;
+			int32 NextY = Y + j;
+
+			if (!IsInBounds(NextX, FieldConfig->FieldSizeX) || !IsInBounds(NextY, FieldConfig->FieldSizeY)) continue;
+			if (GetCell(NextX, NextY)->GetState() == ECellState::SHIPPED) return true;
+		}
+	}
+
+	return false;
+}
+
+void AShFieldBase::ConvertID(const int32 ID, int32& X, int32& Y)
+{
+	SH_VALIDATE(IsValid(FieldConfig), LogMessage_FieldConfigNotValid);
+	SH_VALIDATE(FieldConfig->FieldSizeY != 0, LogMessage_ZeroDividing);
+
+	X = ID / FieldConfig->FieldSizeY;
+	Y = ID % FieldConfig->FieldSizeY;
 }
 
 AShCellBase* AShFieldBase::GetCell(int32 X, int32 Y)

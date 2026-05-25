@@ -28,17 +28,16 @@ public:
 
 	virtual void ApplyCameraActionsInputContext_Implementation() override;
 	virtual void ApplyShipPlacementInputContext_Implementation() override;
+	virtual void ApplyShipRemovementInputContext_Implementation() override;
 	virtual void RemoveShipPlacementInputContext_Implementation() override;
-
-	virtual void BindToFieldCreation_Implementation(const FOnAllowCreationNotMulticast& Event) override;
-	virtual void UnbindFromFieldCreation_Implementation(const FOnAllowCreationNotMulticast& Event) override;
-	virtual void BindToShipCreation_Implementation(const FOnAllowShipCreationNotMulticast& Event) override;
+	virtual void RemoveShipRemovementInputContext_Implementation() override;
 
 	// ================================================================================= //
 
 	// ========================= IGameplayNetwork Interface ========================= //
 
 	virtual void RequestShipCreation_Implementation(EShipSize ShipSize) override;
+	virtual void SendFieldInfo_Implementation() override;
 	virtual void ApproveFieldCreation_Implementation() override;
 	
 	// ============================================================================== //
@@ -74,6 +73,9 @@ private:
 	virtual void RotateShipInput(const FInputActionValue& Value);
 
 	UFUNCTION()
+	virtual void PullShipInput(const FInputActionValue& Value);
+
+	UFUNCTION()
 	virtual void SetupInputMode();
 	
 	// ================================================================================ //
@@ -88,6 +90,10 @@ private:
 	void ServerRequestShipCreation(const EShipSize ShipSize);
 	virtual void ServerRequestShipCreation_Implementation(const EShipSize ShipSize);
 
+	UFUNCTION(Server, Reliable)
+	void ServerSendFieldInfo();
+	virtual void ServerSendFieldInfo_Implementation();
+
 	UFUNCTION(Client, Reliable)
 	void ClientCreateFieldApproved();
 	virtual void ClientCreateFieldApproved_Implementation();
@@ -96,15 +102,11 @@ private:
 	void ClientCreateShipApproved(const EShipSize ShipSize);
 	virtual void ClientCreateShipApproved_Implementation(const EShipSize ShipSize);
 
+	UFUNCTION(Client, Reliable)
+	void ClientPlayerCanStart();
+	virtual void ClientPlayerCanStart_Implementation();
+
 	// ================================================================================//
-
-public:
-
-	UPROPERTY()
-	FOnAllowCreation OnCreateFieldAllowed;
-
-	UPROPERTY()
-	FOnAllowShipCreation OnCreateShipAllowed;
 
 private:
 	// ==================================== Common ==================================== //

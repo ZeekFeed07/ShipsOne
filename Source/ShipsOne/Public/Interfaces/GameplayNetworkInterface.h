@@ -20,6 +20,9 @@ class SHIPSONE_API IGameplayNetworkInterface
 public:
 	UFUNCTION(BlueprintNativeEvent)
 	void RequestShipCreation(EShipSize ShipSize);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void SendFieldInfo();
 	
 	UFUNCTION(BlueprintNativeEvent)
 	void ApproveFieldCreation();
