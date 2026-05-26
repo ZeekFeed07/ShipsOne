@@ -44,10 +44,13 @@ public:
 	virtual void RemoveShip(AShShipBase* ShipPtr);
 
 	UFUNCTION()
-	void SetFieldConfig(UFieldDataAsset* ConfigPtr);
+	virtual void SetFieldConfig(UFieldDataAsset* ConfigPtr);
 
 	UFUNCTION()
-	void SetCellConfig(UCellDataAsset* ConfigPtr);
+	virtual void SetCellConfig(UCellDataAsset* ConfigPtr);
+
+	UFUNCTION()
+	virtual bool PlaceShipRand(AShShipBase* ShipPtr);
 
 protected:
 	virtual void BeginPlay() override;

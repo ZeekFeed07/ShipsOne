@@ -199,12 +199,8 @@ void UShGameManager::PlaceShip()
 
 	auto CurrentCell = Cast<AShCellBase>(CurrentHit.GetActor());
 	if (!IsValid(CurrentCell)) return;
-
-	auto Loc = CurrentCell->GetActorLocation();
-
 	if (!SelfField->PlaceShipOnCell(CurrentCell, CurrentShip)) return;
 
-	CurrentShip->SetActorLocation({ Loc.X, Loc.Y, Loc.Z + 100. });
 	CurrentShip->UpdateOutline(false);
 	RemoveTickTask(&UShGameManager::SnapShipToCursor);
 	RemoveTickTask(&UShGameManager::CheckCellUnderCursor);
@@ -250,6 +246,44 @@ void UShGameManager::PullHoveredShip()
 
 void UShGameManager::ShuffleShips()
 {
+	RemoveAllShips();
+
+	auto ShipMap = ShipsNum;
+
+	const int32 ShipMapSize = ShipMap.Num();
+	TArray<EShipSize> ShipKeys;
+	ShipMap.GetKeys(ShipKeys);
+
+	for (auto Key : ShipKeys)
+	{
+		const int32 Num = *ShipMap.Find(Key);
+		for (int32 i = 0; i < Num; ++i)
+		{
+			auto ShipPtr = SpawnShip(Key);
+
+			if(!SelfField->PlaceShipRand(ShipPtr)) return;
+			
+			DecreaseShipNum(Key);
+			CreatedShips.Add(ShipPtr);
+		}
+	}
+
+	RemoveTickTask(&UShGameManager::SnapShipToCursor);
+	RemoveTickTask(&UShGameManager::CheckCellUnderCursor);
+
+	CurrentShip = nullptr;
+
+	IGameplayControllerInterface::Execute_RemoveShipPlacementInputContext(ControllerRef);
+	IGameplayControllerInterface::Execute_ApplyShipRemovementInputContext(ControllerRef);
+
+	if (!Debug_CheckShipsNum())
+	{
+		IGameplayNetworkInterface::Execute_SendFieldInfo(ControllerRef);
+	}
+
+	UpdateShipsCollision(true);
+
+	OnShipReleased.Broadcast();
 }
 
 bool UShGameManager::CheckCanCreateShip(EShipSize ShipSize)

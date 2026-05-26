@@ -78,8 +78,11 @@ bool AShFieldBase::PlaceShipOnCell(AShCellBase* CellPtr, AShShipBase* ShipPtr)
 
 	if (CheckCanPlaceShip(X, Y, Dir, Size))
 	{
+		auto Loc = CellPtr->GetActorLocation();
+		
 		ColorizeAreaPositiveFinally(X, Y, Dir, Size);
 		ShipPtr->SetPlacedCellID(X, Y);
+		ShipPtr->SetActorLocation({ Loc.X, Loc.Y, Loc.Z + 100. });
 		return true;
 	}
 	else
@@ -221,6 +224,22 @@ void AShFieldBase::SetCellConfig(UCellDataAsset* ConfigPtr)
 	{
 		CellConfig = ConfigPtr;
 	}
+}
+
+bool AShFieldBase::PlaceShipRand(AShShipBase* ShipPtr)
+{
+	for(int32 Iteration = 0; Iteration < 100000; ++Iteration)
+	{
+		const int32 X = FMath::RandRange(0, FieldConfig->FieldSizeX - 1);
+		const int32 Y = FMath::RandRange(0, FieldConfig->FieldSizeY - 1);
+		const EShipDirection Dir = static_cast<EShipDirection>(FMath::RandRange(0, 3));
+		ShipPtr->SetShipDirection(Dir);
+		if (PlaceShipOnCell(GetCell(X, Y), ShipPtr))
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 void AShFieldBase::ClearCells()

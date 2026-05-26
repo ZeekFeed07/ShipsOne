@@ -65,9 +65,10 @@ void AShShipBase::SetShipSize(const EShipSize ShipSize)
 	Size = ShipSize;
 }
 
-void AShShipBase::SetShipDirection(const EShipDirection ShipDirection)
+void AShShipBase::SetShipDirection(const EShipDirection ShipDirection) 
 {
 	Direction = ShipDirection;
+	SetActorRotation({ 0.f, 90.f * static_cast<int32>(Direction), 0.f});
 }
 
 void AShShipBase::SetShipConfig(UShipDataAsset* Asset)
