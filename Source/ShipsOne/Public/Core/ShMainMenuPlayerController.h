@@ -3,7 +3,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "HttpModule.h"
-#include "Interfaces/ControllerUtility.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Interfaces/HttpConnectionInterface.h"
@@ -19,7 +18,6 @@ class UHttpControllerBase;
 UCLASS()
 class SHIPSONE_API AShMainMenuPlayerController :
 	public APlayerController,
-	public IControllerUtility,
 	public IHttpConnectionInterface
 {
 	GENERATED_BODY()
@@ -88,10 +86,6 @@ public:
 	* @return - информация о созданной комнате
 	*/
 	virtual FRoomInfo GetCurrentRoom_Implementation() const override;
-	/**
-	* @brief Запрос на выход из игры
-	*/
-	virtual void RequestQuitGame_Implementation() override;
 protected:
 	virtual void BeginPlay() override;
 	/**

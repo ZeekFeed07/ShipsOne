@@ -12,11 +12,6 @@ AShMainMenuPlayerController::AShMainMenuPlayerController()
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-void AShMainMenuPlayerController::RequestQuitGame_Implementation()
-{
-	UKismetSystemLibrary::QuitGame(GetWorld(), this, EQuitPreference::Quit, false);
-}
-
 void AShMainMenuPlayerController::RequestRoomsList_Implementation()
 {
 	HttpController->RequestRoomsList();
