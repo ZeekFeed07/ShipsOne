@@ -1,20 +1,15 @@
 using UnrealBuildTool;
 
-public class ShipsOne : ModuleRules
+public class ShGameplayCore : ModuleRules
 {
-	public ShipsOne(ReadOnlyTargetRules Target) : base(Target)
+	public ShGameplayCore(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
 		PublicDependencyModuleNames.AddRange(new string[]
 		{ 
 			"Core",
-			"CoreUObject",
-			"Engine",
-			"InputCore",
-			"EnhancedInput",
-			"NetCore",
-			"ShGameplayCore"
+			"CoreUObject"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });

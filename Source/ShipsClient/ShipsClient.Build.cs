@@ -1,8 +1,8 @@
 using UnrealBuildTool;
 
-public class ShipsOne : ModuleRules
+public class ShipsClient : ModuleRules
 {
-	public ShipsOne(ReadOnlyTargetRules Target) : base(Target)
+	public ShipsClient(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
@@ -11,10 +11,11 @@ public class ShipsOne : ModuleRules
 			"Core",
 			"CoreUObject",
 			"Engine",
-			"InputCore",
-			"EnhancedInput",
-			"NetCore",
-			"ShGameplayCore"
+			"UMG",
+			"HTTP",
+			"Json",
+			"JsonUtilities",
+			"ShipsOne"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });

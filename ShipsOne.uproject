@@ -13,6 +13,20 @@
 				"UMG",
 				"CoreUObject"
 			]
+		},
+		{
+			"Name": "ShGameplayCore",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Core",
+				"CoreUObject"
+			]
+		},
+		{
+			"Name": "ShipsClient",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
