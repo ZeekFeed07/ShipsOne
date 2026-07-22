@@ -24,9 +24,17 @@
 			]
 		},
 		{
-			"Name": "ShipsClient",
+			"Name": "ShipsServer",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "ShipsClient",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
+			]
 		}
 	],
 	"Plugins": [
