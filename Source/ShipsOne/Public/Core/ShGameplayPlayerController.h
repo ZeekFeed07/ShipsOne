@@ -11,4 +11,9 @@ class SHIPSONE_API AShGameplayPlayerController : public APlayerController
 	
 public:
 	AShGameplayPlayerController();
+
+protected:
+	virtual void BeginPlay() override;
+
+	virtual void SetupGameManagers();
 };

@@ -1,4 +1,4 @@
-#include "ShGameplayPawn.h"
+#include "Core/ShGameplayPawn.h"
 
 AShGameplayPawn::AShGameplayPawn()
 {

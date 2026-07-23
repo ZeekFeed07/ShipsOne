@@ -1,9 +1,9 @@
-#include "ShGameplayGamemode.h"
+#include "Core/ShGameplayGamemode.h"
 
-#include "ShGameplayGamestate.h"
-#include "ShGameplayPlayerState.h"
-#include "ShGameplayPlayerController.h"
-#include "ShGameplayPawn.h"
+#include "Core/ShGameplayGamestate.h"
+#include "Core/ShGameplayPlayerState.h"
+#include "Core/ShGameplayPlayerController.h"
+#include "Core/ShGameplayPawn.h"
 
 AShGameplayGamemode::AShGameplayGamemode()
 {
