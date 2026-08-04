@@ -9,4 +9,7 @@ class SHIPSONE_API AShGameplayGamestate : public AGameState
 {
 	GENERATED_BODY()
 	
+
+public:
+	bool bBothLogged = false;
 };

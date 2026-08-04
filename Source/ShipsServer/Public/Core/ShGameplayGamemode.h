@@ -11,4 +11,16 @@ class SHIPSSERVER_API AShGameplayGamemode : public AGameMode
 	
 public:
 	AShGameplayGamemode();
+
+public:
+	virtual void PreLogin(const FString& Options, const FString& Address,
+		const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage);
+
+	virtual void PostLogin(APlayerController* NewPlayer) override;
+
+protected:
+	bool IsAllPlayersLogged() const;
+protected:
+	TArray<APlayerController*> LoggedPlayers;
+	int32 MaxPlayers = 2;
 };

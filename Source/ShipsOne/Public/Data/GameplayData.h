@@ -1,57 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayData.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(ShLog_Gameplay, All, All)
-
-// garbage struct for testing USTRUCT and UENUM
-USTRUCT()
-struct Fasd
-{
-	GENERATED_BODY()
-
-	int32 az;
-};
-
-UENUM(BlueprintType)
-enum class EShipSize : uint8
-{
-	ONE = 0,
-	TWO = 1,
-	THREE = 2,
-	FOUR = 3
-};
-
-UENUM(BlueprintType)
-enum class EShipDirection : uint8
-{
-	TOP = 0,
-	RIGHT = 1,
-	BOTTOM = 2,
-	LEFT = 3
-};
-
-UENUM(BlueprintType)
-enum class ECellState : uint8
-{
-	EMPTY = 0,
-	DEADZONE = 1,
-	SHIPPED = 2,
-	FORBIDDEN = 3
-};
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllowCreation);
-DECLARE_DYNAMIC_DELEGATE(FOnAllowCreationNotMulticast);
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllowShipCreation, const EShipSize, ShipSize);
-DECLARE_DYNAMIC_DELEGATE_OneParam(FOnAllowShipCreationNotMulticast, const EShipSize, ShipSize);
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnShipsNumStateSignature, EShipSize, ShipSize, int32, CurrentShipsNum);
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShipHandle);
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameReadySignature, bool, Readiness);
 
 #define SH_VALIDATE_RET(Cond, Msg, RetVal) \
     if (!(Cond)) { UE_LOG(ShLog_Gameplay, Error, TEXT("%s Func: %hs. Obj: %s."), \
@@ -65,7 +16,8 @@ namespace LogMessage
 	// ---- Core / World ---- //
 	inline constexpr TCHAR WorldNotValid[]                   = TEXT("World is not valid.");
 	inline constexpr TCHAR GamemodeNotValid[]                = TEXT("Gamemode is not valid.");
-	inline constexpr TCHAR SubsystemNotValid[]               = TEXT("Manager subsystem is not valid.");
+	inline constexpr TCHAR GameStateNotValid[]               = TEXT("GameState is not valid.");
+	inline constexpr TCHAR SubsystemNotValid[]               = TEXT("One of subsystems is not valid.");
 	inline constexpr TCHAR EnhancedSubsystemNotValid[]       = TEXT("Enhanced player subsystem is not valid.");
 	inline constexpr TCHAR ZeroDividing[]                    = TEXT("Dividing by zero.");
 	inline constexpr TCHAR GameManagerInitFailure[]          = TEXT("Game manager initialization failed.");
@@ -75,7 +27,7 @@ namespace LogMessage
 	inline constexpr TCHAR ControllerNotValid[]              = TEXT("Player controller is not valid.");
 	inline constexpr TCHAR ControllerNotImplementsInterface[]= TEXT("Player controller does not implement necessary interface.");
 	inline constexpr TCHAR ControllerAlreadySet[]            = TEXT("Player controller is already set.");
-	inline constexpr TCHAR PlayerStateNotValid[]             = TEXT("Player state is not valid or not implements interface.");
+	inline constexpr TCHAR PlayerStateNotValid[]             = TEXT("Player state is not valid");
 	inline constexpr TCHAR PawnNotValid[]                    = TEXT("Player Pawn is not valid.");
 	inline constexpr TCHAR PawnNotImplementsInterface[]      = TEXT("Player pawn does not implement interface.");
 	inline constexpr TCHAR CursorNotValid[]                  = TEXT("Mouse cursor is not valid.");

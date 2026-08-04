@@ -7,6 +7,6 @@ public class ShipsOneServerTarget : TargetRules
         Type = TargetType.Server;
         DefaultBuildSettings = BuildSettingsVersion.V4;
         IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_5;
-        ExtraModuleNames.Add("ShipsOne");
+        ExtraModuleNames.AddRange(new[] { "ShipsOne", "ShipsServer" });
     }
 }
